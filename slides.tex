@@ -1,0 +1,2279 @@
+% Copyright (c) 2022 by Lars Spreng
+% This work is licensed under the Creative Commons Attribution 4.0 International License. 
+% To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+% You can add your packages and commands to the loadslides.tex file. 
+% The files in the folder "styles" can be modified to change the layout and design of your slides.
+% I have included examples on how to use the template below. 
+% Some of these examples are taken from the Metropolis template.
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+\documentclass[
+    11pt,
+    notheorems,
+    xcolor={dvipsnames},
+    hyperref={
+        pdfstartview=FitH, 
+        pdftitle={Ikasketa-adibide urriko Informazio-Erauzketa}, 
+        pdfauthor={Oscar Sainz Jimenez}, 
+        %colorlinks=true, 
+        %linkcolor=secondary, 
+        citecolor=secondary, 
+        %urlcolor=secondary
+    }
+]{beamer}
+
+\input{loadslides.tex} % Loads packages and some defined commands
+
+\title[
+% Text entered here will appear in the bottom middle
+]{Ikasketa-adibide urriko Informazio-Erauzketa}
+
+\subtitle{Low-resource Information Extraction}
+
+\author[
+% Text entered here will appear in the bottom left corner
+]{
+    Oscar Sainz Jimenez 
+}
+
+\institute{
+    Supervised by \textbf{Eneko Agirre} and \textbf{Oier Lopez de Lacalle} \\
+    \ \\
+    HiTZ Zentroa - Ixa taldea \\
+    Euskal Herriko Unibertsitatea UPV/EHU
+}
+\date{\empty}
+\date{\\PhD Dissertation\\\today}
+
+\titlegraphic{\vspace{1.5cm}\hspace{1cm}\includegraphics[width=7cm]{images/HitzLOgoa_3.png}}
+
+% \setbeamertemplate{headline}{\hfill\includegraphics[width=4.5cm]{images/HitzLOgoa_3.png}\hspace{1.2cm}\vspace{-1.7cm}}
+% \setbeamertemplate{background}{\tikz[overlay, remember picture, help lines]{
+%     \foreach \x in {0,...,20} \path (current page.south west) +(\x,12.25) node {\small$\x$};
+%     \foreach \y in {0,...,12} \path (current page.south west) +(20.5,\y) node {\small$\y$};
+%     \foreach \x in {0,0.5,...,20.5} \draw (current page.south west) ++(\x,0) -- +(0,12.6);
+%     \foreach \y in {0,0.5,...,12.5} \draw (current page.south west) ++(0,\y) -- +(20.8,0);
+%   }
+% }
+\setbeamertemplate{headline}{\hfill\includegraphics[width=4.5cm]{images/HitzLOgoa_3.png}\hspace{1.45cm}\vspace{-2.12cm}}
+
+
+\begin{document}
+
+% Generate title page
+{
+\setbeamertemplate{footline}{}
+\setbeamertemplate{headline}{}
+\begin{frame}
+    \titlepage
+\end{frame}
+}
+\addtocounter{framenumber}{-1}
+
+% You can declare different parts as a parentof sections
+% \begin{frame}{Outline}
+%     % \begin{columns}
+%     \begin{minipage}[l][0.5\textheight]{0.95\textwidth}
+%         \tableofcontents
+%     \end{minipage}\hfill
+%     % \end{columns}
+% \end{frame}
+
+\begin{frame}{Outline}
+    \begin{enumerate}
+        \item Introduction
+              \begin{enumerate}
+                  \item Motivation
+                  \item Background
+              \end{enumerate}
+
+        \item Contributions
+              \begin{enumerate}
+                  \item Textual Entailment for Information Extraction\footnote[\empty]{Section 2.1 is going to be presented in Basque}%~\ccitep{sainz-etal-2021-label, sainz-etal-2022-textual, sainz-etal-2022-zs4ie}
+                        \begin{itemize}
+                            \item EMNLP 2021~\ccitep{sainz-etal-2021-label}
+                            \item NAACL-Findings 2022~\ccitep{sainz-etal-2022-textual}
+                            \item NAACL 2022~\ccitep{sainz-etal-2022-zs4ie}
+                        \end{itemize}
+                  \item Information Extraction with Large Language Models
+                  \begin{itemize}
+                      \item ICLR 2024~\ccitep{sainz2024gollie}
+                  \end{itemize}
+              \end{enumerate}
+
+        \item Conclusions and Future Work
+    \end{enumerate}
+\end{frame}
+
+\section{Introduction}
+\subsection{Motivation}
+
+\makesubsectiontitlepage
+
+\begin{frame}
+
+    The amount of information and knowledge about the world is growing at an unprecedented rate:
+    \begin{itemize}
+        \item News
+        \item Social media
+        \item Scientific publications
+        \item ...
+    \end{itemize}
+    \blockskip
+
+    This knowledge, is transmitted \emphasize{using natural language}, which:
+    \begin{itemize}
+        \item Is the natural way to communicate for humans.
+        \item But, is not easily understood and processed by machines, which prefer some \emphasize{structured representation}.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    The field of Information Extraction (IE) aims to bridge this gap by:
+    \begin{itemize}
+        \item Automatically extracting structured information from unstructured text.
+        \item Enabling machines to interpret the text.
+        \item Enabling the creation of knowledge bases and representations.
+    \end{itemize}
+    \blockskip
+
+    However, current IE systems \emphasize{are limited to a few schemas and domains}.
+\end{frame}
+
+\begin{frame}
+
+    What do we do if we want to extract information from some texts, but:
+
+    \begin{itemize}
+        \item No available data to train a model \emphasize{for our specific use case.}
+        \item No resources ---expertise, time or money--- to create a large dataset.
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+
+    \begin{figure}
+        \centering
+        \resizebox{\textwidth}{!}{
+            %\input{images/baseline.pgf}
+            \input{images/baseline=True_mnli=False_entailment=False_plus=False.pgf}
+        }
+        \caption{Performance of state-of-the-art IE models on different benchmarks for different amounts of training data.}
+    \end{figure}
+
+    Current state-of-the-art systems for Information Extraction
+    \begin{itemize}
+        \item Require large amounts of labeled data --- do not work without data.
+        \item Are tied to the schema of the training data.
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+
+    Humans, however:
+    \begin{itemize}
+        \item Can perform IE tasks with task descriptions and a couple of examples (i.e. annotation guidelines).
+        \item Can adapt to changes in the annotation schemas with minimal effort.
+    \end{itemize}
+    \blockskip
+    \begin{block}{Main Research Question}
+        Can we leverage the recent advances carried by Language Models to create Information Extraction systems that can adapt to new tasks and schemas \emphasize{with minimal supervision}?
+    \end{block}
+\end{frame}
+
+\subsection{Background}
+
+\subsubsection{Information Extraction}
+\makesubsectiontitlepage
+
+\begin{frame}
+
+    \begin{block}{Definition~\citep{Grishman_2019}}
+        \begin{itemize}[<+->]
+            \item \textit{IE is the automatic identification and classification of instances of user-specified entities, relations, and events from the text.}
+            \item \textit{The output must be structured.}
+            \item \textit{The specification may take the form of examples or textual descriptions.}
+            \item \textit{Equivalent texts should be mapped to the same output.}
+        \end{itemize}
+    \end{block}
+
+\end{frame}
+
+\begin{frame}
+
+    \begin{block}{Example}
+
+        \begin{figure}[!ht]
+            \centering
+
+            \resizebox{\textwidth}{!}{
+            \begin{dependency}[arc edge, arc angle=45, text only label, label style={above}]
+                \only<1>{
+                    \begin{deptext}[column sep=.01cm]
+                        John Smith \& an \& executive \& at \& XYZ Co., \& died \& in \& Florida \& on \& Sunday.\\
+                        \textsc{Per} \& \& \& \& \textsc{Org} \& \textsc{Life:Die} \& \& \textsc{Loc} \& \& \textsc{Date} \\
+                    \end{deptext}
+                }
+                \only<2>{
+                    \begin{deptext}[column sep=.01cm]
+                        {\color{secondary}John Smith} \& an \& executive \& at \& {\color{secondary}XYZ Co.}, \& died \& in \& {\color{secondary}Florida} \& on \& {\color{secondary}Sunday}.\\
+                        \textsc{Per} \& \& \& \& \textsc{Org} \& \textsc{Life:Die} \& \& \textsc{Loc} \& \& \textsc{Date} \\
+                    \end{deptext}
+                 }
+                \only<3>{
+                    \begin{deptext}[column sep=.01cm]
+                        John Smith \& an \& executive \& at \& XYZ Co., \& died \& in \& Florida \& on \& Sunday.\\
+                        \textsc{Per} \& \& \& \& \textsc{Org} \& \textsc{Life:Die} \& \& \textsc{Loc} \& \& \textsc{Date} \\
+                    \end{deptext}
+                }
+                \only<4,5>{
+                    \begin{deptext}[column sep=.01cm]
+                        John Smith \& an \& executive \& at \& XYZ Co., \& {\color{secondary}died} \& in \& Florida \& on \& Sunday.\\
+                        \textsc{Per} \& \& \& \& \textsc{Org} \& \textsc{Life:Die} \& \& \textsc{Loc} \& \& \textsc{Date} \\
+                    \end{deptext}
+                }
+                % \begin{deptext}[column sep=.01cm]
+                %     \only<1>{
+                %         John Smith \& an \& executive \& at \& XYZ Co., \& died \& in \& Florida \& on \& Sunday.\\
+                %     }
+                %     \only<2>{
+                %         {\color{secondary}John Smith} \& an \& executive \& at \& {\color{secondary}XYZ Co.}, \& died \& in \& {\color{secondary}Florida} \& on \& {\color{secondary}Sunday}.\\
+                %     }
+                %     \only<3>{
+                %         John Smith \& an \& executive \& at \& XYZ Co., \& died \& in \& Florida \& on \& Sunday.\\
+                %     }
+                %     \only<4,5>{
+                %         John Smith \& an \& executive \& at \& XYZ Co., \& {\color{secondary}died} \& in \& Florida \& on \& Sunday.\\
+                %     }
+
+                %     \textsc{Per} \& \& \& \& \textsc{Org} \& \textsc{Life:Die} \& \& \textsc{Loc} \& \& \textsc{Date} \\
+                % \end{deptext}
+                \only<1,2,4,5>{\depedge[edge below, label style={below}]{1}{5}{\textsc{Per:EmployeeOf}}}
+                \only<3>{\depedge[edge below, label style={below, secondary}, edge style={secondary}]{1}{5}{\textsc{Per:EmployeeOf}}}
+                \only<1,2,3,4>{
+                    \depedge{6}{1}{\textsc{Victim-Arg}}
+                    \depedge{6}{8}{\textsc{Place-Arg}}
+                    \depedge{6}{10}{\textsc{Time-Arg}}
+                }
+                \only<5>{
+                    \depedge[label style={secondary}, edge style={secondary}]{6}{1}{\textsc{Victim-Arg}}
+                    \depedge[label style={secondary}, edge style={secondary}]{6}{8}{\textsc{Place-Arg}}
+                    \depedge[label style={secondary}, edge style={secondary}]{6}{10}{\textsc{Time-Arg}}
+                }
+
+            \end{dependency}
+            }
+
+            \only<1>{\caption{This example contains annotations for entities, relations, events, and their arguments.}}
+            \only<2>{\caption{This example contains annotations for \textcolor{secondary}{entities}, relations, events, and their arguments.}}
+            \only<3>{\caption{This example contains annotations for entities, \textcolor{secondary}{relations}, events, and their arguments.}}
+            \only<4>{\caption{This example contains annotations for entities, relations, \textcolor{secondary}{events}, and their arguments.}}
+            \only<5>{\caption{This example contains annotations for entities, relations, events, and their \textcolor{secondary}{arguments}.}}
+            \label{fig:ie-adibidea}
+        \end{figure}
+        \blockskip
+
+        
+    \end{block}
+
+\end{frame}
+
+
+% \begin{frame}
+
+%     Information Extraction can be considered any task that involves extracting structured information from unstructured text.
+%     \blockskip
+
+%     However, the standard categorization of tasks in IE is the following:
+%     \begin{itemize}
+%         \item Named Entity Recognition (NER)
+%         \item Relation Extraction (RE)
+%         \item Event Extraction (EE) and Event Argument Extraction (EAE)
+%     \end{itemize}
+
+% \end{frame}
+
+% \begin{frame}
+
+%     \begin{block}{Named Entity Recognition (NER)}
+%         \blockskip
+%         \begin{figure}[!ht]
+%             \centering
+
+%             \resizebox{0.9\textwidth}{!}{
+%                 \begin{dependency}[arc edge, arc angle=45, text only label, label style={above}]
+%                     \begin{deptext}[column sep=.1cm]
+%                         {\color{secondary} John Smith} \& an \& executive \& at \& {\color{secondary} XYZ Co.}, \& died \& in \& {\color{secondary} Florida} \& on \& {\color{secondary} Sunday}.\\
+%                         {\color{secondary} \textsc{Per}} \& \& \& \& {\color{secondary} \textsc{Org}} \& \& \& {\color{secondary} \textsc{Loc}} \& \& {\color{secondary} \textsc{Date}} \\
+%                     \end{deptext}
+%                 \end{dependency}
+%             }
+
+%         \end{figure}
+%         \blockskip
+%         NER is the task of recognizing entities in text and classifying them into predefined categories such as the names of persons, organizations, and locations, ... Sometimes including values such as dates and amounts.
+
+%     \end{block}
+
+% \end{frame}
+
+% \begin{frame}
+
+%     \begin{block}{Relation Extraction (RE)}
+%         \blockskip
+%         \begin{figure}[!ht]
+%             \centering
+
+%             \resizebox{0.9\textwidth}{!}{
+%                 \begin{dependency}[arc edge, arc angle=45, text only label, label style={above}]
+%                     \begin{deptext}[column sep=.1cm]
+%                         John Smith \& an \& executive \& at \& XYZ Co., \& died \& in \& Florida \& on \& Sunday.\\
+%                         \textsc{Per} \& \& \& \& \textsc{Org} \& \& \&  \& \&  \\
+%                     \end{deptext}
+%                     \depedge[edge below, label style={below, secondary}, edge style={secondary}]{1}{5}{\textsc{Per:EmployeeOf}}
+%                 \end{dependency}
+%             }
+
+%         \end{figure}
+%         RE is the task of extracting relations between entities in text. In this case, the relation between the person \textit{John Smith} and the organization \textit{XYZ Co.} is \textsc{Per:EmployeeOf}.
+
+%     \end{block}
+
+% \end{frame}
+
+% \begin{frame}
+
+%     \begin{block}{Event Extraction (EE)}
+%         \blockskip
+%         \begin{figure}[!ht]
+%             \centering
+
+%             \resizebox{0.9\textwidth}{!}{
+%                 \begin{dependency}[arc edge, arc angle=45, text only label, label style={above}]
+%                     \begin{deptext}[column sep=.1cm]
+%                         John Smith \& an \& executive \& at \& XYZ Co., \& {\color{secondary} died} \& in \& Florida \& on \& Sunday.\\
+%                         \& \& \& \&  \& {\color{secondary} \textsc{Life:Die}} \& \&  \& \&  \\
+%                     \end{deptext}
+%                 \end{dependency}
+%             }
+
+%         \end{figure}
+%         \blockskip
+%         EE is the task of identifying and categorizing events in text. Events are defined as explicit actions or incidents in a specific period. This task is usually framed as a sequence labeling task, where each event is identified by the span called \textit{trigger}.
+
+%     \end{block}
+
+% \end{frame}
+
+% \begin{frame}
+
+%     \begin{block}{Event Argument Extraction (EAE)}
+%         \blockskip
+%         \begin{figure}[!ht]
+%             \centering
+
+%             \resizebox{0.9\textwidth}{!}{
+%                 \begin{dependency}[arc edge, arc angle=45, text only label, label style={above}]
+%                     \begin{deptext}[column sep=.1cm]
+%                         John Smith \& an \& executive \& at \& XYZ Co., \& died \& in \& Florida \& on \& Sunday.\\
+%                         \textsc{Per} \& \& \& \& \textsc{Org} \& \textsc{Life:Die} \& \& \textsc{Loc} \& \& \textsc{Date} \\
+%                     \end{deptext}
+%                     \depedge[label style={secondary}, edge style={secondary}]{6}{1}{\textsc{Victim-Arg}}
+%                     \depedge[edge below, label style={below, secondary}, edge style={secondary}]{6}{8}{\textsc{Place-Arg}}
+%                     \depedge[label style={secondary}, edge style={secondary}]{6}{10}{\textsc{Time-Arg}}
+%                 \end{dependency}
+%             }
+
+%         \end{figure}
+%         EAE is the task of identifying the arguments of an event. For instance, the agents and patients taking part in the event, and the additional information relevant to the event. In this case, the arguments of the event \textsc{Life:Die} are the person who died, the place where the event happened, and the time when it happened.
+
+%     \end{block}
+
+% \end{frame}
+
+% \begin{frame}
+
+%     \begin{block}{Evaluation}
+
+%         Information Extraction tasks are evaluated in terms of \textit{Precision} and \textit{Recall} metrics.
+%         \begin{itemize}%[<+, 4>]
+%             \item \emphasize{Precision} measures the proportion of correctly extracted information (\textit{TP}) among all the information extracted (\textit{TP + FP}).
+%             \item \emphasize{Recall} measures the proportion of correctly extracted information (\textit{TP}) among all the information that should have been extracted (\textit{TP + FN}).
+%         \end{itemize}
+%         \blockskip
+
+%         These metrics are usually combined into the \emphasize{F1-score}, which is the harmonic mean of Precision and Recall.
+%         \begin{equation*}
+%             F1\ score = \frac{2}{1/Precision\; + 1/Recall}
+%         \end{equation*}
+%     \end{block}
+
+% \end{frame}
+
+\subsubsection{Zero and Few-Shot Learning}
+\makesubsectiontitlepage
+
+\begin{frame}
+
+    \begin{block}{Definition}
+        \begin{itemize}[<+->]
+            \item Zero-Shot Learning (ZSL) is a paradigm that aims to learn to recognize new classes without any training examples.
+            \item In some cases, this is also applied to new tasks or domains.
+            \item Few-Shot learning is a related paradigm where the model is given a few examples of the new classes, tasks, or domains.
+        \end{itemize}
+    \end{block}
+
+\end{frame}
+
+\begin{frame}
+
+    %With the recent advances in Large Language Models~\ccitep{min2024recent}, it has been shown that these models can be used for Zero-Shot Learning tasks.
+    \begin{block}{ZSL in Natural Language Processing}
+        Methods such as \emphasize{In-Context Learning (ICL)}, \emphasize{Pattern-Exploiting Training (PET)}, and \emphasize{pivot-task based approaches} have been proven effective for Zero-Shot Learning methods.
+        \blockskip
+
+        %The intuition behind these methods is easy: formulating the task of interest as similar as the training objective of the LMs makes them able to perform the task ---to some extent--- without any additional training.
+        \emphasize{Intuition:} Formulate the task of interest as similar to the training objective of the LMs.
+    \end{block}
+
+\end{frame}
+
+% \begin{frame}
+
+%     \begin{block}{In-Context Learning \citep{brown2020language}}
+
+%         \begin{columns}
+
+%             \begin{column}{.45\textwidth}
+%                 This approach leverages the input context to introduce the task description and examples:
+%                 \begin{itemize}[<+, 4>]
+%                     \item The prompt $P$ describes the task we want to accomplish.
+%                     \item The examples $D$ are the few-shot examples we provide to the model.
+%                     \item The model is then asked to predict the label $y_{n+1}$ for the new input $x_{n+1}$.
+%                 \end{itemize}
+%                 \medskip
+%                 \only<4>{
+%                     However, this approach \emphasize{only works with generative LLMs}.
+%                 }
+%             \end{column}
+
+%             \begin{column}{.45\textwidth}
+
+%                 \begin{figure}[!ht]
+%                     \tikzset{
+%                         every node/.style={
+%                                 outer sep=0, text height=1.5ex, text depth=0.25ex
+%                             },
+%                         input/.style={
+%                                 draw=c0, rounded corners, line width=2pt
+%                             },
+%                         pattern/.style={
+%                                 draw=c1, rounded corners, line width=2pt
+%                             },
+%                         label/.style={
+%                                 font=\sffamily\small, rounded corners, inner ysep=0.12cm, inner xsep=0.2cm, outer xsep=0.1cm, text=darkgrey, line width=1pt
+%                             },
+%                         arrow/.style={
+%                                 draw=darkgrey,->,>=latex
+%                             },
+%                     }
+%                     \centering
+%                     \begin{tikzpicture}
+
+%                         \onslide<2->{
+%                             \path[] node[label, font=\sffamily\small, fill=secondary!10, outer sep=0, inner sep=0.15cm, thick, align=left, text=black, draw=c0](input-x1) {Aprendizaje profundo};
+
+%                             \node[label, right=0.4cm of input-x1, fill=secondary!10, outer sep=0, inner sep=0.15cm, thick, align=left, text=black, draw=c1](output-x1){Ikasketa sakona};
+
+%                             \path[] (input-x1) edge[arrow,  draw=black, dotted, thick] (output-x1);
+
+%                             \node[label, below=0.2cm of input-x1.south west, anchor=north west,  fill=secondary!10,outer sep=0, inner sep=0.15cm, thick, align=left, text=black, draw=c0](input-x2){Hola};
+
+%                             \node[label, below=0.2cm of output-x1.south east, anchor=north east, fill=secondary!10, outer sep=0, inner sep=0.15cm, thick, align=left, text=black, draw=c1](output-x2){Kaixo};
+
+%                             \path[] (input-x2) edge[arrow,  draw=black, dotted, thick] (output-x2);
+
+%                             \node[label, below=0.2cm of input-x2.south west, anchor=north west,  fill=secondary!10,outer sep=0, inner sep=0.15cm, thick, align=left, text=black, draw=c0](input-x3){Padres};
+
+%                             \node[label, below=0.2cm of output-x2.south east, anchor=north east, fill=secondary!10, outer sep=0, inner sep=0.15cm, thick, align=left, text=black, draw=c1](output-x3){Gurasoak};
+
+%                             \path[] (input-x3) edge[arrow,  draw=black, dotted, thick] (output-x3);
+
+%                             \node[label, below=0.2cm of input-x3.south west, anchor=north west,  fill=secondary!10,outer sep=0, inner sep=0.15cm, thick, align=left, text=black, draw=c0](input-x4){Perro};
+
+%                             \node[label, below=0.2cm of output-x3.south east, anchor=north east, fill=secondary!10, outer sep=0, inner sep=0.15cm, thick, align=left, text=black, draw=c1](output-x4){Txakur};
+
+%                             \path[] (input-x4) edge[arrow,  draw=black, dotted, thick] (output-x4);
+
+%                             \begin{pgfonlayer}{bg}
+%                                 \path[pattern] node[partialbox=10pt, fit=(input-x1)(output-x4), fill=white, inner ysep=0.25cm, inner xsep=0.25cm](icl-adibideak){};
+%                                 \node[below=0.025cm of icl-adibideak.south, anchor=center, outer sep=0cm, inner sep=0cm, text=c1](icl-adibideak-label){$D$};
+%                             \end{pgfonlayer}
+%                         }
+
+%                         \onslide<1->{
+%                             \path[input] node[partialbox, font=\sffamily\small, fill=primary!10, outer sep=0.1, inner sep=0.25cm, align=center, above=0.4cm of icl-adibideak.north](prompt) {\textsf{Translate the Spanish words to Basque:}};
+
+%                             \node[below=0.05cm of prompt.south, anchor=center, outer sep=0.1cm, inner sep=0cm, text=c0](prompt-label){$P$};
+%                         }
+
+%                         \onslide<3->{
+%                             \path[input] node[partialbox=12pt, below=0.6cm of input-x4.south west, anchor=north west,  fill=secondary!10,outer sep=0, inner sep=0.15cm, thick, align=left, text=black](input-x5) {\textsf{Avión}};
+
+%                             \node[below=0.0cm of input-x5.south, anchor=center, outer sep=0.cm, inner sep=0cm, text=c0](input-x5-label){$x_{n+1}$};
+
+%                             \path[input] node[label, below=0.6cm of output-x4.south east, anchor=north east, fill=white, draw=white, outer sep=0, inner sep=0.15cm, align=left, text=black](output-x5) {\textsf{\mask}};
+
+%                             \node[below=0.0cm of output-x5.south, anchor=center, outer sep=0.cm, inner sep=0cm, text=c0](output-x5-label){$y_{n+1}$};
+
+%                             \path[] (input-x5) edge[arrow,  draw=black, dotted, thick] (output-x5);
+%                         }
+
+%                     \end{tikzpicture}
+%                     \caption{Word translation as ICL.}
+%                     \label{fig:icl-adibidea}
+%                 \end{figure}
+
+%             \end{column}
+
+%         \end{columns}
+
+%     \end{block}
+% \end{frame}
+
+% \begin{frame}
+
+%     \begin{block}{Pattern-Exploiting Training \citep{schick-schutze-2021-exploiting}}
+
+%         \begin{columns}
+
+%             \begin{column}{.45\textwidth}
+%                 PET leverages the Masking Language Modeling task to prompt LMs to perform specific tasks.
+%                 \begin{itemize}[<+, 4>]
+%                     \item Give some input text $x$.
+%                     \item The input is encapsulated in a pattern $P$ with a masked token \mask{}.
+%                     \item The model is asked to predict the verbalized label $v(y)$.
+%                 \end{itemize}
+
+%             \end{column}
+
+%             \begin{column}{.45\textwidth}
+%                 \begin{figure}[!ht]
+%                     \tikzset{
+%                         every node/.style={
+%                                 outer sep=0, text height=1.5ex, text depth=0.25ex
+%                             },
+%                         input/.style={
+%                                 draw=c1, rounded corners, line width=2pt
+%                             },
+%                         pattern/.style={
+%                                 draw=c0, rounded corners, line width=2pt
+%                             },
+%                         label/.style={
+%                                 font=\sffamily\small, rounded corners, inner ysep=0.12cm, inner xsep=0.2cm, outer xsep=0.1cm, text=darkgrey, line width=1pt
+%                             },
+%                         arrow/.style={
+%                                 draw=darkgrey,->,>=latex
+%                             },
+%                     }
+%                     \centering
+%                     \begin{tikzpicture}
+
+%                         \path[input]
+%                         node[partialbox, font=\sffamily\small, fill=secondary!10, outer sep=0, inner sep=0.15cm, thick, align=center](input-x1) {Oil prices rise};
+
+%                         \onslide<2->{
+%                             \node[font=\sffamily\small, right=0.05cm of input-x1, inner sep=0, outer sep=0](pattern-text-1){?\vphantom{pt}};
+%                             \node[font=\sffamily\small, right=0.05cm of pattern-text-1, inner sep=0, outer ysep=0.1cm](pattern-text-2){\mask{}\vphantom{pt}};
+%                             \node[font=\sffamily\small, right=0.05cm of pattern-text-2, inner sep=0, outer ysep=0.1cm](pattern-text-3){,\ \vphantom{pt}};
+%                         }
+%                         \path[input] node[partialbox, font=\sffamily\small, fill=secondary!10, outer sep=0, inner sep=0.15cm, thick, align=center, right=0.05cm of pattern-text-3](input-x2) {\textsf{Oil prices fall back}};
+
+%                         \onslide<2->{
+%                             \node[font=\sffamily\small, right=0.05cm of input-x2, inner sep=0, outer ysep=0.1cm](pattern-text-3){.\vphantom{pt}};
+%                         }
+
+%                         \node[below=0.025cm of input-x1.south, anchor=center, outer sep=0cm, inner sep=0cm, text=c0](input-label){ ${x}_2$};
+%                         \node[below=0.025cm of input-x2.south, anchor=center, outer sep=0cm, inner sep=0cm, text=c0](input-label){ ${x}_1$};
+
+%                         \onslide<2->{
+%                             \begin{pgfonlayer}{bg}
+%                                 \path[pattern] node[partialbox=13pt, fit=(input-x1)(pattern-text-1)(pattern-text-2)(pattern-text-3)(input-x2), fill=primary!10, inner ysep=0.25cm, inner xsep=0.25cm](pattern){};
+%                                 \node[below=0.025cm of pattern.south, anchor=center, outer sep=0cm, inner sep=0cm, text=c0](pattern-label){ $P({x})$};
+%                             \end{pgfonlayer}
+%                         }
+
+%                         \onslide<3->{
+%                             \node[label, below=0.1cm of pattern.south east, anchor=north east, minimum width=0.9cm, xshift=0.1cm](verbalizer-e){Yes};
+%                             \node[label, below=0cm of verbalizer-e.south west, anchor=north west, text=black, minimum width=0.9cm, fill=secondary!10, draw=c1](verbalizer-c){No};
+
+%                             \node[label, left=0.2cm of verbalizer-e](label-e){entailment};
+%                             \node[label, left=0.2cm of verbalizer-c, text=black, fill=secondary!10, draw=c1](label-c){not\_entailment};
+
+%                             \path[] (label-e) edge[arrow] (verbalizer-e);
+%                             \path[] (label-c) edge[arrow, draw=black] (verbalizer-c);
+
+%                             \node[below=0.1cm of label-c, text=c0, inner sep=0](y-label){$y\vphantom{v()}$};
+%                             \node[below=0.1cm of verbalizer-c, text=c1, inner sep=0](y-label){$v(y)$};
+
+%                             \draw [black!75, dotted, thick, rounded corners, ->, >=latex] (verbalizer-c.east)--([xshift=0.2cm]verbalizer-c.east)--([xshift=0.2cm, yshift=2.55cm]verbalizer-c.east) -- ([yshift=2.55cm]verbalizer-c.east -| pattern-text-2.center) node [midway, fill=white] {$q_{\mathbf{p}}(y \mid {x})$} -- (pattern-text-2.north);
+%                         }
+
+%                     \end{tikzpicture}
+%                     \caption{Textual Entailment as PET.}
+%                     \label{fig:prompt-learning}
+%                 \end{figure}
+%             \end{column}
+
+%         \end{columns}
+
+%     \end{block}
+
+% \end{frame}
+
+% \begin{frame}
+
+%     \begin{block}{Pivot-task based learning}
+
+%         \begin{columns}
+
+%             \begin{column}{.45\textwidth}
+%                 Pivot-task based learning consists on reformulating the task of interest into some pivot task, such as Textual Entailment.
+%                 \begin{itemize}[<+>]
+%                     \item The input $x$ is given as the premise.
+%                     \item Each label $y$ is verbalized $v(y)$ and,
+%                     \item The hypotheses are generated using a hypothesis template.
+%                     \item The inference is done by selecting the most probable hypothesis.
+%                 \end{itemize}
+%             \end{column}
+
+%             \begin{column}{.45\textwidth}
+
+%                 \begin{figure}[!ht]
+%                     \tikzset{
+%                         every node/.style={
+%                                 outer sep=0, text height=1.5ex, text depth=0.25ex
+%                             },
+%                         input/.style={
+%                                 draw=c0, rounded corners, line width=2pt
+%                             },
+%                         pattern/.style={
+%                                 draw=c1, rounded corners, line width=1pt
+%                             },
+%                         label/.style={
+%                                 font=\sffamily\small, rounded corners, inner ysep=0.12cm, inner xsep=0.2cm, outer xsep=0.1cm, text=darkgrey, line width=1pt
+%                             },
+%                         arrow/.style={
+%                                 draw=darkgrey,->,>=latex
+%                             },
+%                     }
+%                     \centering
+%                     \begin{tikzpicture}
+
+%                         \onslide<1->{
+%                             \path[input]
+%                             node[partialbox, font=\sffamily\small, fill=secondary!10, outer sep=0, inner sep=0.15cm, thick, align=center, text height=1.3cm](input-x) {They offer tasteless pizza \\with an undercooked crust\\ and minimal toppings.};
+
+%                             \node[below=0.025cm of input-x.south, anchor=center, outer sep=0cm, inner sep=0cm, text=c0](input-label){ ${x}$};
+%                             \node[above=0.15cm of input-x, text=c1, inner sep=0](input-x-label){premise};
+%                         }
+
+%                         \onslide<3->{
+%                             \path[input] node[right=1.3cm of input-x.south east, anchor=south, fill=primary!10, outer sep=0, inner sep=0.15cm, thick, align=left, text=black, draw=c0](hyp-template){It was \mask .};
+
+%                             \node[above=0.15cm of hyp-template, text=c1, inner sep=0](hyp-template-label){hypothesis};
+%                         }
+
+%                         \onslide<2->{
+%                             \path[input] node[below=2cm of hyp-template.south east, fill=secondary!10, outer sep=0, inner sep=0.15cm, thick, anchor=north east, text=black, rounded corners, line width=1pt, draw=c0](y-positive){good};
+
+%                             \node[below=0.5cm of y-positive.south, anchor=center, outer sep=0cm, inner sep=0cm, text=c0](y-positive-label){ ${v(y = positive)}$};
+
+%                             \path[] node[left=3cm of y-positive.north west, fill=secondary!10, outer sep=0, inner sep=0.15cm, thick, anchor=north, text=black, rounded corners, line width=1pt, draw=c0](y-negative){bad};
+
+%                             \node[below=0.5cm of y-negative.south, anchor=center, outer sep=0cm, inner sep=0cm, text=c0](y-negative-label){ ${v(y = negative)}$};
+%                         }
+%                         \only<-3>{
+%                             \onslide<3>{
+%                                 \node[below=.8cm of hyp-template.south, anchor=center, outer sep=0.2cm, inner sep=0cm, text=c0](hyp-template-label){$hyp\_template(v(y))$};
+
+%                                 \draw[black!75, dotted, thick, rounded corners, ->, >=latex] (hyp-template-label.north) -- (hyp-template.south);
+
+%                                 \draw[black!75, dotted, thick, rounded corners, -, >=latex] (y-positive.north) --([yshift=.55cm]y-positive.north) --([yshift=.55cm, xshift=-.33cm]y-positive.north) -- (hyp-template-label.south);
+
+%                                 \draw[black!75, dotted, thick, rounded corners, -, >=latex] (y-negative.north) -- ([yshift=.55cm]y-negative.north) -- ([yshift=.55cm, xshift=3.2cm]y-negative.north) -- (hyp-template-label.south);
+%                             }
+%                         }
+%                         \only<4>{
+%                             \node[below=.8cm of hyp-template.south, anchor=center, outer sep=0.2cm, inner sep=0cm, text=c0](hyp-template-label){$hyp\_template(v(y))$};
+
+%                             \draw[secondary!75, thick, rounded corners, ->, >=latex] (hyp-template-label.north) -- (hyp-template.south);
+
+%                             \draw[black!75, dotted, thick, rounded corners, -, >=latex] (y-positive.north) --([yshift=.55cm]y-positive.north) --([yshift=.55cm, xshift=-.33cm]y-positive.north) -- (hyp-template-label.south);
+
+%                             \draw[secondary!75, thick, rounded corners, -, >=latex] (y-negative.north) -- ([yshift=.55cm]y-negative.north) -- ([yshift=.55cm, xshift=3.2cm]y-negative.north) -- (hyp-template-label.south);
+%                         }
+%                     \end{tikzpicture}
+%                     \caption{Sentiment Analysis as Textual Entailment.}
+%                     \label{fig:pibot-learning}
+%                 \end{figure}
+
+%             \end{column}
+
+%         \end{columns}
+
+%     \end{block}
+
+% \end{frame}
+
+\subsubsection{Textual Entailment}
+\makesubsectiontitlepage
+
+\begin{frame}
+
+    \begin{block}{Definition ~\citep{dagan2006rte, de-marneffe-etal-2008-finding}}
+        \begin{itemize}[<+->]
+            \item Textual entailment is defined as a directional relationship between pairs of text expressions called the premise $P$ and the hypothesis $H$.
+            \item Is said that $P$ entails $H$ if, typically, a human reading $P$ would infer that $H$ is true. %~\citep{dagan2006rte}.
+            \item Is said that $H$ contradicts $P$ if, a human reading $P$ would infer that events in $H$ are very unlikely to occur given $P$. %~\citep{de-marneffe-etal-2008-finding}.
+        \end{itemize}
+    \end{block}
+    \blockskip
+
+    The task of Textual Entailment is usually formulated as a \emphasize{three-way classification task}.
+\end{frame}
+
+\begin{frame}[t]
+    \begin{block}{Example}
+
+        \begin{figure}
+            \centering
+            %\resizebox{.9\textwidth}{!}{
+            \begin{tabular}{rp{26em}}
+                Premise:                   & \textit{A person on a horse jumps over a broken-down airplane.}                           \\ \midrule
+                \onslide<1,2>{Entails:     & \textit{A person is outdoors, on a horse.}                      \\}
+                \onslide<1,3>{Neutral:     & \textit{A person is training his horse for a competition.}      \\}
+                \onslide<1,4>{Contradicts: & \textit{A person is at a diner, ordering an omelette.}}
+            \end{tabular}
+            %}
+            \caption{Example of Textual Entailment task.}
+            \label{fig:snli-adibidea}
+        \end{figure}
+
+        \only<2>{
+            In this case, the premise entails the hypothesis because the hypothesis is \emphasize{a general case of} the premise.
+        }
+        \only<3>{
+            The relation is neutral because the premise \emphasize{lacks information} about the events in the hypothesis.
+        }
+        \only<4>{
+            The hypothesis contradicts the premise because the events in the hypothesis \emphasize{are not compatible with} the events in the premise.
+        }
+
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \begin{block}{Why Textual Entailment as a pivot for ZSL?}
+        In order to properly solve the task of recognizing textual entailment, a model must understand:
+        \begin{itemize}[<+->]
+            \item Lexical semantics: a dog is an animal but not a cat.
+            \item Predicate argument structure: \inlinepattern{I baked him a cake} entails \inlinepattern{I baked a cake} but not \inlinepattern{I baked him}.
+            \item Logic inference: \inlinepattern{I will drink coffee or water} does not entail \inlinepattern{I will drink coffee} but it does the other way around.
+            \item World knowledge: \inlinepattern{there are Basque speakers in Donostia} entails \inlinepattern{there are Basque speakers} \inlinepattern{in Gipuzkoa}.
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\section{Contributions}
+
+\subsection{Textual Entailment for IE}
+\makesubsectiontitlepage
+
+\begin{frame}
+    \begin{block}{Motivation}
+        \begin{itemize}[<+->]
+        %     \item Current state-of-the-art apporaches for Information Extraction add new parameters to LMs to perform the task.
+        %     \item These new parameters allow to shape the output of the model to the desired format.
+        %     \item But, as they are randomly initialized, they do not have any prior knowledge about the task and need data to be adjusted. This results in a poor Zero and Few-Shot performance.
+            \item Current state-of-the-art approaches require a lot of data to perform well.
+            \item These approaches are tied to a single schema (defined by the data) by design.
+        \end{itemize}
+        \blockskip
+        \only<3>{How can we formulate Information Extraction to be flexible for new scenarios?}
+
+    \end{block}
+\end{frame}
+
+\begin{frame}[t]
+
+    \begin{block}{Approach}
+
+        \begin{figure}[!ht]
+            \tikzset{
+                every node/.style={
+                        outer sep=0, text height=1.5ex, text depth=0.25ex
+                    },
+                input/.style={
+                        draw=c0, rounded corners, line width=2pt
+                    },
+                pattern/.style={
+                        draw=c1, rounded corners, line width=2pt
+                    },
+                label/.style={
+                        font=\sffamily\small, rounded corners, inner ysep=0.12cm, inner xsep=0.2cm, outer xsep=0.1cm, text=darkgrey, line width=1pt
+                    },
+                arrow/.style={
+                        draw=darkgrey,->,>=latex
+                    },
+            }
+            \centering
+            \begin{tikzpicture}
+
+                \onslide<1->{ % ENTITY PAIR FRAME
+                    \path[input] node[partialbox=18pt, font=\sffamily\small, fill=white, outer sep=0.1, inner sep=0.25cm, align=center](entity-pair) {\textbf{\textcolor{primary}{Billy Mays}\textsubscript{\textsc{ PER}} , \textcolor{secondary}{Tampa}{\textsubscript{\textsc{ LOC}}}}};
+
+                    \node[below=0.05cm of entity-pair.south, anchor=center, outer sep=0.1cm, inner sep=0cm, text=c0](entity-pair-label){$(e_1, e_2)$};
+                }
+
+
+                \invisible<1>{
+                    \invisible<3-7>{ % RELATION FRAME
+                        \node[label, right=1cm of entity-pair.east, fill=secondary!10,outer sep=0, inner sep=0.15cm, thick, align=left, text=black, draw=c0](relation){\textbf{\textsc{per:city\_of\_death}}};
+
+                        \only<2> \path[] (entity-pair) edge[arrow,  draw=black, dotted, thick] (relation);
+                    }}
+
+                \onslide<1->{ % CONTEXT FRAME
+                    \only<1>{
+                        \path[input] node[partialbox=19pt, left=6.5cm of entity-pair.north, font=\sffamily\small, fill=white, outer sep=0.1, inner sep=0.25cm, align=center, text height=2.3cm, anchor=north](context) {
+                            \textcolor{primary}{\textbf{Billy Mays}}, the bearded, boisterous\\pitchman who, as the undisputed king\\of TV yell and sell, became an unlikely\\pop culture icon, died at his home\\in \textcolor{secondary}{\textbf{Tampa}}, Fla, on Sunday.
+                        };
+                    }
+                    \only<2->{
+                        \path[input] node[partialbox=19pt, left=6.5cm of entity-pair.north, font=\sffamily\small, fill=white, outer sep=0.1, inner sep=0.25cm, align=center, text height=2.3cm, anchor=north](context) {
+                            \textcolor{primary}{\textbf{Billy Mays}}, \textcolor{black!50}{the bearded, boisterous}\\\textcolor{black!50}{pitchman who, as the undisputed king}\\\textcolor{black!50}{of TV yell and sell, became an unlikely}\\\textcolor{black!50}{pop culture icon, }died at his home\\in \textcolor{secondary}{\textbf{Tampa}}, Fla, on Sunday.
+                        };
+                    }
+
+                    \node[below=0.05cm of context.south, anchor=center, outer sep=0.1cm, inner sep=0cm, text=c0](context-label){context};
+                }
+
+                \only<3->{
+                    \only<4-> \node[label, below=2cm of entity-pair, fill=primary!10,outer sep=0, inner sep=0.15cm, thick, align=center, text=black, draw=c1, text width=5.2cm](verb1){\textcolor{primary}{\textbf{Billy Mays}} was born in \textcolor{secondary}{\textbf{Tampa}}};
+
+                    \only<5-> \node[label, below=0.2cm of verb1, fill=primary!10,outer sep=0, inner sep=0.15cm, thick, align=center, text=black, draw=c1, text width=5.2cm](verb2){\textcolor{primary}{\textbf{Billy Mays}}'s birthday is on \textcolor{secondary}{\textbf{Tampa}}};
+
+                    \only<6-> \node[label, below=0.2cm of verb2, fill=primary!10,outer sep=0, inner sep=0.15cm, thick, align=center, text=black, draw=c1, text width=5.2cm](verb3){\textcolor{primary}{\textbf{Billy Mays}} is \textcolor{secondary}{\textbf{Tampa}} years old.};
+
+                    \only<7>{
+                        \node[below=0.2cm of verb3, fill=white, outer sep=0, inner sep=0.15cm, thick, align=center, text=black](verb-null){$\cdots$};
+
+                        \node[label, below=0.2cm of verb-null, fill=primary!10, outer sep=0, inner sep=0.15cm, thick, align=center, text=black, draw=c1, text width=5.2cm](verb4){\textcolor{primary}{\textbf{Billy Mays}} died in \textcolor{secondary}{\textbf{Tampa}}};
+
+                    }
+
+                    \only<8>{
+                        \node[below=0.2cm of verb3, fill=white, outer sep=0, inner sep=0.15cm, thick, align=center, text=black](verb-null){$\cdots$};
+
+                        \node[label, below=0.2cm of verb-null, fill=secondary!10, outer sep=0, inner sep=0.15cm, thick, align=center, text=black, draw=c1, text width=5.2cm](verb4){\textcolor{primary}{\textbf{Billy Mays}} died in \textcolor{secondary}{\textbf{Tampa}}};
+
+                        \draw[black!75, thick, rounded corners, ->, >=latex] (verb4.east) -- ([xshift=2.3cm]verb4.east) -- (relation.south);
+                    }
+
+                    \only<4->{
+                        \node[below=0.8cm of entity-pair, fill=white, outer sep=0, inner sep=0.15cm, thick, align=center, text=black](verbalizer-label){\textsc{Verbalizer}$(e_1, e_2, r)$};
+
+                        \path[] (entity-pair-label) edge[draw=black, dotted, thick] (verbalizer-label);
+                        \path[] (verbalizer-label) edge[arrow,  draw=black, dotted, thick] (verb1);
+
+                    }
+
+
+                    % \path[] (verb4.east) edge[arrow,  draw=black, dotted, thick] (relation.south);
+
+                }
+
+
+            \end{tikzpicture}
+            % \caption{Textual Entailment for Information Extraction approach.}
+        \end{figure}
+
+    \end{block}
+
+\end{frame}
+
+\begin{frame}
+    \begin{block}{Label verbalization}
+
+        \begin{columns}
+            \begin{column}{.6\textwidth}
+                \begin{itemize}
+                    \item Label verbalization is the process of converting a label into a prototypical natural language sentence.
+                    \item These verbalizations will be later used as hypotheses $H_r = \textsc{Verbalizer}(e_1, e_2, r)$
+                \end{itemize}
+
+                \begin{table}
+                    \centering
+                    \resizebox{\textwidth}{!}{
+                        \begin{tabular}{rcl}
+                            \toprule
+                            Relation                       & Templates                                                                                                  & Valid argument types               \\
+                            \midrule
+                            per:alternate\_names           & \textcolor{primary}{\{e\textsubscript{1}\}} is also known as \textcolor{secondary}{\{e\textsubscript{2}\}} & \textsc{Person}     \\
+                            per:date\_of\_birth            & \textcolor{primary}{\{e\textsubscript{1}\}}'s birthday is on \textcolor{secondary}{\{e\textsubscript{2}\}} & \textsc{Date}                      \\
+                                                           & \textcolor{primary}{\{e\textsubscript{1}\}} was born on \textcolor{secondary}{\{e\textsubscript{2}\}}      &                                    \\
+                            per:age                        & \textcolor{primary}{\{e\textsubscript{1}\}} is \textcolor{secondary}{\{e\textsubscript{2}\}} years old     & \textsc{Number}, \textsc{Duration} \\
+                            per:country\_of\_birth         & \textcolor{primary}{\{e\textsubscript{1}\}} was born in \textcolor{secondary}{\{e\textsubscript{2}\}}      & \textsc{Country}                   \\
+                            per:stateorprovince\_of\_birth & \textcolor{primary}{\{e\textsubscript{1}\}} was born in \textcolor{secondary}{\{e\textsubscript{2}\}}      & \textsc{StateOrProvince}           \\
+                            \bottomrule
+                        \end{tabular}
+                    }
+                    \caption{Templates and valid argument types for some relations.}
+                \end{table}
+
+            \end{column}
+
+            \begin{column}{.4\textwidth}
+                \begin{figure}[!ht]
+                    \tikzset{
+                        every node/.style={
+                                outer sep=0, text height=1.5ex, text depth=0.25ex
+                            },
+                        input/.style={
+                                draw=c0, rounded corners, line width=2pt
+                            },
+                        pattern/.style={
+                                draw=c1, rounded corners, line width=2pt
+                            },
+                        label/.style={
+                                font=\sffamily\small, rounded corners, inner ysep=0.12cm, inner xsep=0.2cm, outer xsep=0.1cm, text=darkgrey, line width=1pt
+                            },
+                        arrow/.style={
+                                draw=darkgrey,->,>=latex
+                            },
+                    }
+                    \centering
+
+                    \begin{tikzpicture}
+
+                        \path[input] node[partialbox=18pt, font=\sffamily\small, fill=white, outer sep=0.1, inner sep=0.25cm, align=center](entity-pair) {\textbf{\textcolor{primary}{Billy Mays}\textsubscript{\textsc{ PER}} , \textcolor{secondary}{Tampa}{\textsubscript{\textsc{ LOC}}}}};
+
+                        \node[below=0.05cm of entity-pair.south, anchor=center, outer sep=0.1cm, inner sep=0cm, text=c0](entity-pair-label){$(e_1, e_2)$};
+
+                        \node[label, below=2cm of entity-pair, fill=primary!10,outer sep=0, inner sep=0.15cm, thick, align=center, text=black, draw=c1, text width=5.2cm](verb1){\textcolor{primary}{\textbf{Billy Mays}} was born in \textcolor{secondary}{\textbf{Tampa}}};
+
+                        \node[label, below=0.2cm of verb1, fill=primary!10,outer sep=0, inner sep=0.15cm, thick, align=center, text=black, draw=c1, text width=5.2cm](verb2){\textcolor{primary}{\textbf{Billy Mays}}'s birthday is on \textcolor{secondary}{\textbf{Tampa}}};
+
+                        \node[label, below=0.2cm of verb2, fill=primary!10,outer sep=0, inner sep=0.15cm, thick, align=center, text=black, draw=c1, text width=5.2cm](verb3){\textcolor{primary}{\textbf{Billy Mays}} is \textcolor{secondary}{\textbf{Tampa}} years old.};
+
+                        \node[below=0.2cm of verb3, fill=white, outer sep=0, inner sep=0.15cm, thick, align=center, text=black](verb-null){$\cdots$};
+
+                        \node[label, below=0.2cm of verb-null, fill=primary!10, outer sep=0, inner sep=0.15cm, thick, align=center, text=black, draw=c1, text width=5.2cm](verb4){\textcolor{primary}{\textbf{Billy Mays}} died in \textcolor{secondary}{\textbf{Tampa}}};
+
+                        \node[below=0.8cm of entity-pair, fill=white, outer sep=0, inner sep=0.15cm, thick, align=center, text=black](verbalizer-label){\textsc{Verbalizer}$(e_1, e_2, r)$};
+
+                        \path[] (entity-pair-label) edge[draw=black, dotted, thick] (verbalizer-label);
+                        \path[] (verbalizer-label) edge[arrow,  draw=black, dotted, thick] (verb1);
+                    \end{tikzpicture}
+
+                \end{figure}
+
+            \end{column}
+        \end{columns}
+
+    \end{block}
+\end{frame}
+
+\begin{frame}
+
+    \begin{block}{Inference}
+
+        \onslide<1->{
+            The probability for a given relation $r$ to hold between two entities $e_1$ and $e_2$ is computed as:
+            \begin{equation}
+                P(r \mid x, e_1, e_2) = \max_{hyp \; \in \; H_r}  P_\theta(\text{ent} \mid x, hyp)
+            \end{equation}
+            \noindent where $P_\theta(ent \mid \cdot)$ is the entailment probability given by the textual entailment model and $x$ is the context.
+            \medskip
+        }
+
+        \onslide<2->{
+            The relation is predicted as the one with the highest probability, among the relations that satisfy the type constraints:
+            \begin{equation}
+                y = \arg \max_{r \in R} \; \delta_r(e_1, e_2) \cdot P(r \mid x, e_1, e_2)
+            \end{equation}
+        }
+        
+        \onslide<3->{
+            where $\delta_r(e_1, e_2)$ is a function that returns 1 if the entities are of the correct type for the relation $r$ and 0 otherwise:
+            \begin{equation}
+                \delta_r(e_1, e_2) =
+                \begin{cases}
+                    \;1 & (e_1, e_2) \in E_{r} \\
+                    %         & \land \; t_i \in T_r \\
+                    \;0 & \text{otherwise}
+                \end{cases}
+            \end{equation}
+        }
+        
+    \end{block}
+
+\end{frame}
+
+\begin{frame}
+
+    \begin{block}{Inference}
+        \onslide<1->{
+            Information Extraction tasks usually define an extra class for the case where no relation holds between the entities. This class is usually called \emphasize{no relation}, \emphasize{none}, or \emphasize{negative} class.
+            \blockskip
+        }
+
+        \onslide<2->{
+            In order to predict the correct label considering the negative class we leverage a threshold $\tau$:
+            \begin{equation}
+                \Hat{r} =
+                \begin{cases}
+                    \;y    & P(y \mid x, e_1, e_2) >= \tau \\
+                    %         & \land \; t_i \in T_r \\
+                    \;none & \text{otherwise}
+                \end{cases}
+            \end{equation}
+
+            \noindent The threshold $\tau$ is usually set to $0.5$, but it can be adjusted to maximize the F1 score on the validation set.
+        }
+
+    \end{block}
+
+\end{frame}
+
+\subsubsection{Zero-Shot Information Extraction}
+% \makesubsectiontitlepage
+
+\begin{frame}
+    \begin{block}{Research Questions}
+        \begin{itemize}
+            {\pgfsetfillopacity{1.0}
+                \item How does this approach perform on different Information Extraction tasks in a Zero-Shot setting?
+                \begin{itemize}
+                    \item How does the performance vary with different models?
+                \end{itemize}
+            }
+            {\pgfsetfillopacity{0.2}
+                \item How does the Textual Entailment approach scale with Information Extraction data?
+                \begin{itemize}
+                    \item How does it compare with traditional (state-of-the-art) methods?
+                \end{itemize} 
+            }
+            {\pgfsetfillopacity{0.2}
+                \item How does the amount and variety of textual entailment data affect the performance of the model?
+            }
+            {\pgfsetfillopacity{0.2}
+                \item Can we transfer the knowledge learned from one schema to another?
+            }
+            {\pgfsetfillopacity{0.2}
+                \item How does the performance vary with different verbalization styles?
+            }
+            {\pgfsetfillopacity{0.2}
+                \item How is the effort-performance relation of creating verbalizations compared to annotating examples?
+            }
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \begin{block}{Experimental setup}
+        \begin{itemize}
+            \item We compared two state-of-the-art models fine-tuned on Textual Entailment data:
+                  \begin{itemize}
+                      \item RoBERTa~\citep{liu2019roberta}
+                      \item DeBERTa~\citep{he2021deberta}
+                  \end{itemize}
+            \item We implemented and created verbalizations for 4 tasks across 3 different datasets:
+                  \begin{itemize}
+                      \item NER: CoNLL 2003~\citep{tjong-kim-sang-de-meulder-2003-introduction}
+                      \item RE: TACRED~\citep{zhang2017tacred}
+                      \item EE and EAE: ACE05~\citep{ACE}
+                  \end{itemize}
+            \item We evaluated the impact of optimizing the threshold $\tau$ on the performance.
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \begin{block}{Zero-Shot results}
+
+        \begin{figure}
+            \centering
+            \resizebox{.92\textwidth}{!}{
+                \input{images/zero_shot_results.pgf}
+            }
+            \caption{Zero-Shot results on several IE tasks.}
+        \end{figure}
+
+        \begin{itemize}
+            \item There is no one best model for all cases (RoBERTa vs DeBERTa).
+            \item Optimizing the threshold $\tau$ boosts performance in some cases but, it can also overfit.
+                  % \item Event related tasks are more challenging for Textual Entailment models.
+        \end{itemize}
+
+    \end{block}
+
+\end{frame}
+
+\subsubsection{Few-Shot Information Extraction}
+% \makesubsectiontitlepage
+
+% \begin{frame}
+
+%     Realistically, there are always some examples for the tasks, for instance, the examples available in the guidelines.
+
+%     \blockskip
+%     \begin{block}{Research Questions}
+%         \begin{itemize}
+%             \item How does the Textual Entailment approach scale with Information Extraction data?
+%             \item How does it compare with traditional (state-of-the-art) methods?
+%         \end{itemize}
+%     \end{block}
+% \end{frame}
+
+\begin{frame}
+    \begin{block}{Research Questions}
+        \begin{itemize}
+            {\pgfsetfillopacity{0.2}
+                \item How does this approach perform on different Information Extraction tasks in a Zero-Shot setting?
+                \begin{itemize}
+                    \item How does the performance vary with different models?
+                \end{itemize}
+            }
+            {\pgfsetfillopacity{1.0}
+                \item How does the Textual Entailment approach scale with Information Extraction data?
+                \begin{itemize}
+                    \item How does it compare with traditional (state-of-the-art) methods?
+                \end{itemize} 
+            }
+            {\pgfsetfillopacity{0.2}
+                \item How does the amount and variety of textual entailment data affect the performance of the model?
+            }
+            {\pgfsetfillopacity{0.2}
+                \item Can we transfer the knowledge learned from one schema to another?
+            }
+            {\pgfsetfillopacity{0.2}
+                \item How does the performance vary with different verbalization styles?
+            }
+            {\pgfsetfillopacity{0.2}
+                \item How is the effort-performance relation of creating verbalizations compared to annotating examples?
+            }
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \begin{block}{Fine-tuning Textual Entailment models with Information Extraction data}
+        Converting \emphasize{positive} examples:
+        \begin{figure}
+            \tikzset{
+                every node/.style={
+                        outer sep=0, text height=1.5ex, text depth=0.25ex
+                    },
+                input/.style={
+                        draw=c0, rounded corners, line width=2pt
+                    },
+                pattern/.style={
+                        draw=c1, rounded corners, line width=2pt
+                    },
+                label/.style={
+                        font=\sffamily\small, rounded corners, inner ysep=0.12cm, inner xsep=0.2cm, outer xsep=0.1cm, text=darkgrey, line width=1pt
+                    },
+                arrow/.style={
+                        draw=darkgrey,->,>=latex
+                    },
+            }
+            \centering
+            \begin{tikzpicture}
+
+                \path[input] node[partialbox=46pt, font=\sffamily\small, fill=white, outer sep=0.1, inner sep=0.25cm, align=center](entity-pair) {\textbf{\textcolor{primary}{Billy Mays}\textsubscript{\textsc{ PER}} , \textcolor{secondary}{Tampa}{\textsubscript{\textsc{ LOC}}}}};
+                \node[below=0.05cm of entity-pair.south, anchor=center, outer sep=0.1cm, inner sep=0cm, text=c0, font=\sffamily\small](entity-pair-label){\textsc{per:city\_of\_death}};
+
+                \node[label, left=.2cm of entity-pair, fill=white, outer sep=0, inner sep=0.25cm, align=center, text=black, draw=c0, line width=1.2pt](context){Context};
+
+                \node[label, right=4.5cm of entity-pair, fill=secondary!10, outer sep=0, inner sep=0.15cm, thick, align=center, text=black, draw=c1, text width=5.2cm](verb1){\textcolor{primary}{\textbf{Billy Mays}} died in \textcolor{secondary}{\textbf{Tampa}}};
+
+                \node[left=0.8cm of verb1, fill=white, outer sep=0, inner sep=0.15cm, thick, align=right, text=black, font=\sffamily\small](verb1-label){\textsc{Entails}};
+
+                \path[] (entity-pair) edge[draw=black, dotted, thick] (verb1-label);
+                \path[] (verb1-label) edge[arrow,  draw=black, dotted, thick] (verb1);
+
+                \node[label, below=.2cm of verb1, fill=primary!10, outer sep=0, inner sep=0.15cm, thick, align=center, text=black, draw=c1, text width=5.2cm](verb2){\textcolor{primary}{\textbf{Billy Mays}} was born in \textcolor{secondary}{\textbf{Tampa}}};
+
+                \node[left=0.8cm of verb2, fill=white, outer sep=0, inner sep=0.15cm, thick, align=right, text=black, font=\sffamily\small](verb2-label){\textsc{Neutral}};
+
+                \draw [black!75, dotted, thick, rounded corners, -, >=latex] (entity-pair.east) -- ([xshift=1cm]entity-pair.east) --  ([xshift=1cm, yshift=-.85cm]entity-pair.east) -- (verb2-label);
+                \path[] (verb2-label) edge[arrow,  draw=black, dotted, thick] (verb2);
+
+            \end{tikzpicture}
+
+        \end{figure}
+
+        For \emphasize{negative} examples:
+        \begin{figure}
+            \tikzset{
+                every node/.style={
+                        outer sep=0, text height=1.5ex, text depth=0.25ex
+                    },
+                input/.style={
+                        draw=c0, rounded corners, line width=2pt
+                    },
+                pattern/.style={
+                        draw=c1, rounded corners, line width=2pt
+                    },
+                label/.style={
+                        font=\sffamily\small, rounded corners, inner ysep=0.12cm, inner xsep=0.2cm, outer xsep=0.1cm, text=darkgrey, line width=1pt
+                    },
+                arrow/.style={
+                        draw=darkgrey,->,>=latex
+                    },
+            }
+            \centering
+            \begin{tikzpicture}
+
+                \path[input] node[partialbox=32pt, font=\sffamily\small, fill=white, outer sep=0.1, inner sep=0.25cm, align=center](entity-pair) {\textbf{\textcolor{primary}{Peter}\textsubscript{\textsc{ PER}} , \textcolor{secondary}{executive}{\textsubscript{\textsc{ TITLE}}}}};
+                \node[below=0.05cm of entity-pair.south, anchor=center, outer sep=0.1cm, inner sep=0cm, text=c0, font=\sffamily\small](entity-pair-label){\textsc{no\_relation}};
+
+                \node[label, left=.2cm of entity-pair, fill=white, outer sep=0, inner sep=0.25cm, align=center, text=black, draw=c0, line width=1.2pt](context){Context};
+
+                \node[label, right=4.5cm of entity-pair, fill=primary!10, outer sep=0, inner sep=0.15cm, thick, align=center, text=black, draw=c1, text width=5.2cm](verb1){\textcolor{primary}{\textbf{Peter}} is an \textcolor{secondary}{\textbf{executive}}};
+
+                \node[left=0.8cm of verb1, fill=white, outer sep=0, inner sep=0.15cm, thick, align=right, text=black, font=\sffamily\small](verb1-label){\textsc{Contradicts}};
+
+                \path[] (entity-pair) edge[draw=black, dotted, thick] (verb1-label);
+                \path[] (verb1-label) edge[arrow,  draw=black, dotted, thick] (verb1);
+
+            \end{tikzpicture}
+
+        \end{figure}
+
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \begin{block}{Experimental setup}
+        \begin{itemize}
+            \item We focused on the Relation Extraction and Event Argument Extraction tasks.
+            \item We compared the performance of the approach with the state-of-the-art models for each of the tasks and a \emphasize{strong baseline}~\citep{baldini-soares-etal-2019-matching}.
+            \item We fine-tuned each of the models with different amounts of data: 0\%, 1\%, 5\%, 10\%, 20\% and 100\%.
+            \item Average across three runs is reported.
+        \end{itemize}
+
+    \end{block}
+
+\end{frame}
+
+\begin{frame}
+    \begin{block}{Few-Shot results}
+        \begin{figure}
+            \centering
+            \resizebox{.9\textwidth}{!}{
+                \input{images/baseline=True_mnli=False_entailment=True_plus=False.pgf}
+            }
+            \caption{Few-Shot results on Relation Extraction and Event Argument Extraction.}
+        \end{figure}
+    \end{block}
+
+    \begin{itemize}
+        \item The Textual Entailment approach outperforms the baseline in all stages, particularly in low-resource.
+        \item For some cases (WikiEvents), the approach even improves by a large margin with 100\% of the data.
+    \end{itemize}
+
+\end{frame}
+
+% \begin{frame}
+%     The key component for the Textual Entailment approach is the intrinsic data. This data can be from different sources are require different inference skills.
+%     \blockskip
+
+%     \begin{block}{Research Questions}
+%         \begin{itemize}
+%             \item How does the amount and variety of textual entailment data affect the performance of the model?
+%         \end{itemize}
+%     \end{block}
+% \end{frame}
+
+\begin{frame}
+    \begin{block}{Research Questions}
+        \begin{itemize}
+            {\pgfsetfillopacity{0.2}
+                \item How does this approach perform on different Information Extraction tasks in a Zero-Shot setting?
+                \begin{itemize}
+                    \item How does the performance vary with different models?
+                \end{itemize}
+            }
+            {\pgfsetfillopacity{0.2}
+                \item How does the Textual Entailment approach scale with Information Extraction data?
+                \begin{itemize}
+                    \item How does it compare with traditional (state-of-the-art) methods?
+                \end{itemize} 
+            }
+            {\pgfsetfillopacity{1.0}
+                \item How does the amount and variety of textual entailment data affect the performance of the model?
+            }
+            {\pgfsetfillopacity{0.2}
+                \item Can we transfer the knowledge learned from one schema to another?
+            }
+            {\pgfsetfillopacity{0.2}
+                \item How does the performance vary with different verbalization styles?
+            }
+            {\pgfsetfillopacity{0.2}
+                \item How is the effort-performance relation of creating verbalizations compared to annotating examples?
+            }
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \begin{block}{Textual Entailment data}
+
+        \begin{columns}
+            \begin{column}{.5\textwidth}
+                \begin{itemize}
+                    \item MNLI: Multi-Genre Natural Language Inference.
+                    \item SNLI: Stanford Natural Language Inference.
+                    \item aNLI: Adversarial Natural Language Inference.
+                    \item Fever-NLI: Fact Extraction and VERification.
+                \end{itemize}
+            \end{column}
+            \begin{column}{.40\textwidth}
+                \begin{figure}
+                    \tikzset{
+                        every node/.style={
+                                outer sep=0, text height=1.5ex, text depth=0.25ex
+                            },
+                        input/.style={
+                                draw=c0, rounded corners, line width=2pt
+                            },
+                        pattern/.style={
+                                draw=c1, rounded corners, line width=2pt
+                            },
+                        label/.style={
+                                font=\sffamily\small, rounded corners, inner ysep=0.12cm, inner xsep=0.2cm, outer xsep=0.1cm, text=darkgrey, line width=1pt
+                            },
+                        arrow/.style={
+                                draw=darkgrey,->,>=latex
+                            },
+                    }
+                    \centering
+                    \begin{tikzpicture}
+
+                        \node[label, fill=secondary!10, outer sep=0, inner sep=0.3cm, thick, align=center, text=black, draw=c1, text width=3.2cm](mnli){MNLI};
+
+                        \node[label, below=0.3cm of mnli, fill=primary!10, outer sep=0, inner sep=0.3cm, thick, align=center, text=black, draw=c1, text width=3.2cm](snli){SNLI};
+                        \node[label, below=0.1cm of snli, fill=primary!10, outer sep=0, inner sep=0.3cm, thick, align=center, text=black, draw=c1, text width=3.2cm](anli){aNLI};
+                        \node[label, below=0.1cm of anli, fill=primary!10, outer sep=0, inner sep=0.3cm, thick, align=center, text=black, draw=c1, text width=3.2cm](fnli){FEVER};
+
+                        \begin{pgfonlayer}{bg}
+                            \path[pattern] node[partialbox=25pt, fit=(mnli)(fnli), fill=white, inner ysep=0.25cm, inner xsep=0.25cm](bg){};
+                            \node[below=0.025cm of bg.south, anchor=center, outer sep=0cm, inner sep=0cm, text=c1](bg-label){Datasets};
+                        \end{pgfonlayer}
+
+                    \end{tikzpicture}
+
+                \end{figure}
+            \end{column}
+        \end{columns}
+
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \begin{block}{Experimental setup}
+        We compared RoBERTa models fine-tuned on different textual entailment data:
+        \begin{itemize}
+            \item Entailment: a RoBERTa model fine-tuned on MNLI, SNLI, aNLI and Fever-NLI data.
+            \item Entailment\textsubscript{ MNLI-only}: a RoBERTa model fine-tuned only on MNLI data.
+        \end{itemize}
+
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \begin{block}{Textual Entailment data results}
+        \begin{figure}
+            \centering
+            \resizebox{.95\textwidth}{!}{
+                \input{images/baseline=False_mnli=True_entailment=True_plus=False.pgf}
+            }
+            \caption{Results on Relation Extraction and Event Argument Extraction with different Textual Entailment data.}
+        \end{figure}
+
+        \begin{itemize}
+            \item The variety and quantity of data affect all scenarios, from low-resource to high-resource.
+        \end{itemize}
+    \end{block}
+
+\end{frame}
+
+% \begin{frame}
+%     Formulating the task as Textual Entailment allows to train models with several Textual Entailment datasets, as they share the same format.
+%     \medskip
+
+%     Can we do the same with Information Extraction tasks?
+%     \blockskip
+%     \begin{block}{Research Questions}
+%         \begin{itemize}
+%             \item Can we transfer the knowledge learnt from one schema to another?
+%         \end{itemize}
+
+%     \end{block}
+
+% \end{frame}
+
+\begin{frame}
+    \begin{block}{Research Questions}
+        \begin{itemize}
+            {\pgfsetfillopacity{0.2}
+                \item How does this approach perform on different Information Extraction tasks in a Zero-Shot setting?
+                \begin{itemize}
+                    \item How does the performance vary with different models?
+                \end{itemize}
+            }
+            {\pgfsetfillopacity{0.2}
+                \item How does the Textual Entailment approach scale with Information Extraction data?
+                \begin{itemize}
+                    \item How does it compare with traditional (state-of-the-art) methods?
+                \end{itemize} 
+            }
+            {\pgfsetfillopacity{0.2}
+                \item How does the amount and variety of textual entailment data affect the performance of the model?
+            }
+            {\pgfsetfillopacity{1.0}
+                \item Can we transfer the knowledge learned from one schema to another?
+            }
+            {\pgfsetfillopacity{0.2}
+                \item How does the performance vary with different verbalization styles?
+            }
+            {\pgfsetfillopacity{0.2}
+                \item How is the effort-performance relation of creating verbalizations compared to annotating examples?
+            }
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \begin{block}{Experimental setup}
+        We compared Entailment models fine-tuned on different Event Argument Extraction data:
+        \begin{itemize}
+            \item WikiEvents --> ACE: a model trained first on WikiEvents and then evaluated on ACE.
+            \item ACE --> WikiEvents: a model trained first on ACE and then evaluated on WikiEvents.
+        \end{itemize}
+
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \begin{block}{Multi-source learning results}
+        \begin{figure}
+            \centering
+            \resizebox{.60\textwidth}{!}{
+                \input{images/baseline=True_mnli=False_entailment=True_plus=True.pgf}
+            }
+            \caption{Schema transfer results across Event Argument Extraction tasks.}
+        \end{figure}
+
+        \begin{itemize}
+            \item The knowledge from one schema is successfully transferred to another schema without mapping.
+            \item It particularly impacts the Zero-Shot results, where the model has no access to the target schema.
+        \end{itemize}
+    \end{block}
+
+\end{frame}
+
+
+\subsubsection{Label Verbalization}
+% \makesubsectiontitlepage
+
+% \begin{frame}
+%     The Textual Entailment approach works, but:
+%     \begin{itemize}
+%         \item It heavily relies on the quality of the model.
+%         \item And the verbalizations.
+%     \end{itemize}
+%     \blockskip
+
+%     In the previous experiments we assesed the difference in performance regarding the model quaility.
+%     \medskip
+
+%     Now we will focus on the \emphasize{verbalizations}.
+
+
+% \end{frame}
+
+\begin{frame}
+    \begin{block}{Research Questions}
+        \begin{itemize}
+            {\pgfsetfillopacity{0.2}
+                \item How does this approach perform on different Information Extraction tasks in a Zero-Shot setting?
+                \begin{itemize}
+                    \item How does the performance vary with different models?
+                \end{itemize}
+            }
+            {\pgfsetfillopacity{0.2}
+                \item How does the Textual Entailment approach scale with Information Extraction data?
+                \begin{itemize}
+                    \item How does it compare with traditional (state-of-the-art) methods?
+                \end{itemize} 
+            }
+            {\pgfsetfillopacity{0.2}
+                \item How does the amount and variety of textual entailment data affect the performance of the model?
+            }
+            {\pgfsetfillopacity{0.2}
+                \item Can we transfer the knowledge learned from one schema to another?
+            }
+            {\pgfsetfillopacity{1.0}
+                \item How does the performance vary with different verbalization styles?
+            }
+            {\pgfsetfillopacity{0.2}
+                \item How is the effort-performance relation of creating verbalizations compared to annotating examples?
+            }
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \begin{block}{Verbalizations for different tasks}
+
+        \begin{table}
+            \centering
+            \resizebox{\textwidth}{!}{
+                \begin{tabular}{cccc}
+                    \toprule
+                    Named Entity Recognition                                             & Relation Extraction                                                          & Event Extraction                                      & Event Argument Extraction                                                        \\
+                    \midrule
+                    \texttt{{\color{secondary} \{X\}} is a person.}                      & \texttt{{\color{secondary} \{X\}} is employed by {\color{primary} \{Y\}}.}   & \texttt{{\color{secondary} \{X\}} refers to a birth.} & \texttt{The victim was {\color{secondary} \{X\}}}                                \\
+                    \texttt{{\color{secondary} \{X\}} is a date.}                        & \texttt{{\color{secondary} \{X\}} and {\color{primary} \{Y\}} are siblings.} & \texttt{{\color{tertiary} Someone} got married.}      & \texttt{The {\color{tertiary} \{event\}} occurred in {\color{secondary} \{X\}}.} \\
+                    \texttt{{\color{secondary} \{X\}} is a {\color{tertiary} \{type\}}.} & \texttt{{\color{primary} \{Y\}} is the son of {\color{secondary} \{X\}}.}    & \texttt{{\color{tertiary} \{argument\}} was jailed.}  & \texttt{{\color{secondary} \{X\}} inspected {\color{tertiary} something}.}       \\
+                    % \midrule
+                    % \texttt{{\color{secondary} \{X\}} is a {\color{primary} \{type\}}.} & \\
+                    \bottomrule
+                \end{tabular}
+            }
+        \end{table}
+        \blockskip
+        The verbalization templates:
+        \begin{itemize}
+            \item must have variables for the spans ---\texttt{{\color{secondary} \{X\}}} and \texttt{{\color{primary} \{Y\}}}--- to classify
+            \item can be generic as \inlinepattern{\texttt{{\color{secondary} \{X\}} is a {\color{tertiary} \{type\}}}}, or specific as \inlinepattern{\texttt{{\color{secondary} \{X\}} is a person}}.
+            \item can include additional information about the instance as \inlinepattern{\texttt{{\color{tertiary} \{argument\}} was jailed}} or some placeholders as \inlinepattern{\texttt{{\color{tertiary} Someone} got married}}.
+        \end{itemize}
+
+    \end{block}
+\end{frame}
+
+% \begin{frame}
+%     The way the verbalizations are created very from one developer to other. There can be several strategies to create templates for the same task.
+%     \blockskip
+
+%     \begin{block}{Research Questions}
+%         \begin{itemize}
+%             \item How does the performance vary with different verbalization styles?
+%         \end{itemize}
+
+%     \end{block}
+
+% \end{frame}
+
+\begin{frame}
+    \begin{block}{Experimental setup}
+        We compared the performance in Event Argument Extraction with different verbalization styles:
+        \begin{itemize}
+            \item We compared verbalizations created by:
+                  \begin{itemize}
+                      \item a developer with \emphasize{Computer Science} background and experience in Information Extraction.
+                      \item a developer with \emphasize{Linguistics} background and experience in annotation tasks.
+                  \end{itemize}
+            \item Developers were limited to 15 minutes per type.
+            \item Developers were provided with the annotation guidelines, a couple of examples of the type and a small script to test the verbalizations individually with the examples.
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \begin{columns}
+        \begin{column}{0.4\textwidth}
+            \begin{block}{Verbalization style comparison}
+
+                \begin{itemize}
+                    \item The average and standard deviation of the F1 scores across 3 runs are reported.
+                    \item There are \emphasize{no major differences} in the performance between the two verbalization styles, except for the 100\% scenario where the templates of the developer A are slightly better (3 F1 points).
+                \end{itemize}
+            \end{block}
+        \end{column}
+
+        \begin{column}{0.46\textwidth}
+            \begin{figure}
+                \centering
+                \resizebox{\textwidth}{!}{
+                    \input{images/developer_comaprison.pgf}
+                }
+                \caption{Performance difference on the development.}
+            \end{figure}
+        \end{column}
+    \end{columns}
+
+\end{frame}
+
+% \begin{frame}
+%     \begin{block}{Qualitative analysis insights}
+%         \begin{itemize}
+%             \item The developer with a Computer Science background tended to:
+%                   \begin{itemize}
+%                       \item Use conjugated verb forms.
+%                       \item Make use of additional information as variables.
+%                       \item Create general case verbalizations.
+%                   \end{itemize}
+%             \item While the developer with a Linguistics background tended to:
+%                   \begin{itemize}
+%                       \item Use more infinitives and lemmas.
+%                       \item Create many and specific case verbalizations.
+%                   \end{itemize}
+%         \end{itemize}
+%         \blockskip
+
+%         Still, the performance was similar for both developers.
+%     \end{block}
+
+% \end{frame}
+
+% \begin{frame}
+%     Creating verbalizations is not annotating examples, but it \emphasize{still requires time, knowledge and effort}.
+%     \blockskip
+
+%     \begin{block}{Research Questions}
+%         \begin{itemize}
+%             \item How is the effort-performance relation of creating verbalizations compared to annotating examples?
+%         \end{itemize}
+%     \end{block}
+
+% \end{frame}
+
+\begin{frame}
+    \begin{block}{Research Questions}
+        \begin{itemize}
+            {\pgfsetfillopacity{0.2}
+                \item How does this approach perform on different Information Extraction tasks in a Zero-Shot setting?
+                \begin{itemize}
+                    \item How does the performance vary with different models?
+                \end{itemize}
+            }
+            {\pgfsetfillopacity{0.2}
+                \item How does the Textual Entailment approach scale with Information Extraction data?
+                \begin{itemize}
+                    \item How does it compare with traditional (state-of-the-art) methods?
+                \end{itemize} 
+            }
+            {\pgfsetfillopacity{0.2}
+                \item How does the amount and variety of textual entailment data affect the performance of the model?
+            }
+            {\pgfsetfillopacity{0.2}
+                \item Can we transfer the knowledge learned from one schema to another?
+            }
+            {\pgfsetfillopacity{0.2}
+                \item How does the performance vary with different verbalization styles?
+            }
+            {\pgfsetfillopacity{1.0}
+                \item How is the effort performance ratio of creating verbalizations compared to annotating examples?
+            }
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \begin{block}{Experimental setup}
+        We compared the performance in Event Argument Extraction of annotating examples vs creating verbalizations in terms of time:
+        \begin{itemize}
+            \item We performed a simulation of annotating a portion of the ACE05 dataset.
+            \item Based on the time spent, we extrapolated the time to annotate the whole dataset.
+            \item We measured the time spent in creating the verbalizations for the same dataset.
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+
+    \begin{block}{Effort-performance comparison}
+        \begin{figure}[t]
+            \vspace{-1em}
+            \centering
+            \resizebox{.75\textwidth}{!}{
+                \input{images/effort_comparison.pgf}
+            }
+            % \caption{Effort-performance relation.}
+        \end{figure}
+
+        \begin{itemize}
+            \item Spending some initial time creating verbalizations is more efficient than annotating examples.
+            \item At \(\sim \)23 hours of work, the verbalizations are more efficient than annotating examples.
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+% \begin{frame}
+
+%     Based on the previous results,
+%     \begin{itemize}
+%         \item We can conclude that the Textual Entailment approach is a viable alternative for Information Extraction tasks.
+%         \item Additionally, it requires less time and effort.
+%     \end{itemize}
+%     \blockskip
+
+%     At this point, why not leverage a Textual Entailment model to assist in the annotation process? Similar to machine translation + post-edition is done in the translation industry.
+
+% \end{frame}
+
+% \begin{frame}
+%     Current workflow on creating an Infromation Extraction system for a specific domains involve:
+%     \begin{enumerate}
+%         \item Defining fine-grained guidelines.
+%         \item Annotating examples.
+%         \item Training a model.
+%     \end{enumerate}
+%     \medskip
+
+%     However, any change in the guidelines or the domain requires to start from scratch.
+%     \blockskip
+
+%     We propose a new workflow: \textit{verbalize-while-defining}.
+
+% \end{frame}
+
+% \begin{frame}
+
+%     \begin{columns}
+%         \begin{column}{0.45\textwidth}
+%             \begin{block}{Verbalize-while-defining workflow}
+%                 The workflow aims to leverage a Textual Entailment model to assist in the annotation process:
+%                 \begin{itemize}
+%                     \item Define the guideline for a new type.
+%                     \item Create verbalizations for new definition.
+%                     \item Run the model on the verbalizations.
+%                     \item Identify and correct the verbalizations that do not match the definition.
+%                     \item Save the incorrect examples for post-edition.
+%                     \item Repeat with a new definition.
+%                 \end{itemize}
+%             \end{block}
+%         \end{column}
+%         \begin{column}{0.45\textwidth}
+%             \begin{figure}
+%                 \centering
+%                 \resizebox{\textwidth}{!}{
+%                     \includegraphics{images/zs4ie_ui.png}
+%                 }
+%             \end{figure}
+%         \end{column}
+%     \end{columns}
+
+% \end{frame}
+
+\subsubsection{Conclusions and Limitations}
+% \makesubsectiontitlepage
+
+\begin{frame}
+    \begin{block}{Conclusions}
+        \begin{itemize}[<+->]
+            \item \emphasize{Works out of the box}: the approach works without giving any example for training.
+            \item \emphasize{Few-shot is easy}: examples from the tasks can be automatically converted to Textual Entailment.
+            \item \emphasize{Multi-source learning}: the knowledge from one schema can be transferred to another schema without any mapping.
+            \item \emphasize{Time efficiency}: creating verbalizations is more time efficient than annotating examples.
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \begin{block}{Limitations}
+        %The Textual Entailment approach yields promising results, but has its limitations:
+        \begin{itemize}[<+->]
+            \item \emphasize{Need of span candidates}: the approach classifies spans or span pairs, therefore it requires a span candidate generation step. %It is not well suited for sequence labelling tasks.
+            \item \emphasize{Computation efficiency}: the approach requires to perform one inference per verbalization, which can be computationally expensive when the amount of verbalizations is large.
+            \item \emphasize{Lack of detail}: verbalizations are prototypical expressions of the type defined, but lack the details and exceptions that are present in the guidelines.
+            \item \emphasize{Definition disagreement}: type definition from one dataset to another can vary, and sometimes it cannot be expressed through simple verbalizations.
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\subsection{Information Extraction with Large Language Models}
+\makesubsectiontitlepage
+
+\begin{frame}
+    \begin{block}{Motivation}
+        \begin{itemize}[<+->]
+            \item Large Language Models (LLMs) have shown to be effective in several Natural Language Processing tasks, particularly in low-resource scenarios.
+            \item Instruction tunning has shown that LLMs can learn to follow instructions to perform multiple tasks with a single model.
+            \item But, current approaches for low-resource Information Extraction ---based on generative LLMs or not--- do not leverage detailed instructions about the task:
+                  \begin{itemize}
+                      \item They fail when different datasets define a type differently.
+                  \end{itemize}
+        \end{itemize}
+        \blockskip
+
+        \onslide<5-> Can we make use of detailed guidelines to improve the performance of LLMs in Information Extraction tasks?
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \begin{block}{Challenges}
+        In order to teach LLMs to follow guidelines for Information Extraction tasks, we need to address two main challenges:
+        \begin{itemize}
+            \item How to properly represent the guideline definitions to be used by the LLM?
+            \item How to avoid the LLM memorizing the tasks and not attending to the guidelines?
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \begin{columns}
+        \begin{column}{0.35\textwidth}
+            \begin{block}{Input-output representation}
+                \begin{itemize}
+                    \item Labels are defined as Python classes.
+                    \item Guidelines are introduced as docstrings in the code.
+                    \item Representative candidates are introduced as comments.
+                    \item The text is introduced as a variable.
+                    \item The result is a list of instances.
+                \end{itemize}
+            \end{block}
+        \end{column}
+        \begin{column}{0.6\textwidth}
+            \begin{table}
+                \centering
+                \begin{tabular}{p{\textwidth}}
+                    % \texttt{\# The following lines describe the task definition} \\
+                    \texttt{\textcolor{github-purple}{@dataclass}}                                                                                                    \\
+                    \texttt{\textcolor{github-red}{class} \textcolor{github-dark-red}{Metric}(\textcolor{github-dark-red}{Entity}):}                                  \\
+                    \texttt{\textcolor{github-blue}{\quad """Refers to evaluation metrics used to assess}}                                                            \\
+                    \texttt{\textcolor{github-blue}{\quad the performance of AI models and algorithms.}}                                                              \\
+                    \texttt{\textcolor{github-blue}{\quad Annotate specific metrics like Accuracy."""}}                                                               \\
+                    \\
+                    \texttt{\quad span: str  \textcolor{github-gray}{\# Such as: "mean squared error",  …}}                                                           \\ \\
+                    % \midrule
+                    \texttt{text = \textcolor{github-blue}{"The Information Extraction system was evaluated using F1-Score."}}                                \\ \\
+                    % \midrule
+                    \texttt{result \textcolor{github-red}{=} [\textcolor{github-dark-red}{Metric}(span\textcolor{github-red}{=}\textcolor{github-blue}{"F1-score"})]} \\
+                \end{tabular}
+            \end{table}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}
+    \begin{block}{Training regularization}
+        LLMs can easily memorize the tasks by finding patterns in the input, and consecuently not attending to the guidelines. To avoid this, we propose the following regularizations:
+        \begin{itemize}[<+->]
+            \item \emphasize{Class order shuffling}: the order of the classes is shuffled for each instance.
+            \item \emphasize{Class dropout}: a random percentage of the classes is dropped for each instance and the output is changed accordingly.
+            \item \emphasize{Guideline paraphrasing}: the guidelines are paraphrased to avoid the model memorizing the definitions.
+            \item \emphasize{Representative candidate sampling}: the representative candidates are sampled from a pool of candidates.
+            \item \emphasize{Class name masking}: some class names are masked ---replaced by \inlinepattern{\texttt{LABEL\_1}}--- in the input.
+        \end{itemize}
+
+    \end{block}
+\end{frame}
+
+% \begin{frame}
+%     \begin{block}{Research Questions}
+%         \begin{itemize}
+%             \item Can LLMs learn to follow guidelines for Information Extraction tasks?
+%             \item Are guidelines helpful when data is available? And when it is not?
+%         \end{itemize}
+%     \end{block}
+
+% \end{frame}
+
+\begin{frame}
+    \begin{block}{Research Questions}
+        \begin{itemize}
+            {\pgfsetfillopacity{1.0}
+                \item Are guidelines helpful when data is available? And when it is not?
+            }
+            {\pgfsetfillopacity{0.2}
+                \item How do the guidelines affect seen and unseen labels?
+            }
+            {\pgfsetfillopacity{0.2}
+                \item Where do the errors come from?
+                \item Which are the remaining challenges?
+            }
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \begin{block}{Experimental Setup}
+        \begin{itemize}
+            \item We fine-tuned CodeLlama models \emphasize{with and without using guidelines}.
+            \item We divided our pool of datasets into train and eval:
+                  \begin{itemize}
+                      \item For training we used 9 datasets from \textit{News} and \textit{Biomedical} domains.
+                      \item For evaluation we used 10 datasets from \textit{News}, \textit{Biomedical}, \textit{Cybercrime}, \textit{Wikipedia} and more domains.
+                  \end{itemize}
+        \end{itemize}
+    \end{block}
+
+\end{frame}
+
+\begin{frame}
+    \begin{block}{Baseline \hspace{14.5em}GoLLIE}
+        \begin{columns}[t]
+            \begin{column}{0.36\textwidth}
+                \begin{table}
+                    \vspace{-3.5em}
+                    \begin{tabular}{p{\textwidth}}
+                        \texttt{\small\textcolor{github-purple}{@dataclass}}                                                                              \\
+                        \texttt{\small\textcolor{github-red}{class} \textcolor{github-dark-red}{VulnerabilityPatch}(\textcolor{github-dark-red}{Event}):} \\ \\
+                        \texttt{\small\quad mention: str}                                                                                                 \\
+                        \texttt{\small\quad cve: \textcolor{github-dark-red}{List}[str]}                                                                  \\
+                        \texttt{\small\quad issues: \textcolor{github-dark-red}{List}[str]}                                                               \\
+                        \texttt{\small\quad platforms: \textcolor{github-dark-red}{List}[str]}                                                            \\
+                        \texttt{\small\quad vulnerability: \textcolor{github-dark-red}{List}[str]}                                                        \\
+                        % \texttt{\small\quad vulnerable\_system: \textcolor{github-dark-red}{List}[str]} \\ 
+                        \texttt{\small\quad releaser: \textcolor{github-dark-red}{List}[str]}                                                             \\
+                    \end{tabular}
+                \end{table}
+            \end{column}
+            \vrule{}
+            \begin{column}{0.58\textwidth}
+                \begin{table}
+                    \vspace{-3.5em}
+                    \begin{tabular}{p{\textwidth}}
+                        \texttt{\small\textcolor{github-purple}{@dataclass}}                                                                              \\
+                        \texttt{\small\textcolor{github-red}{class} \textcolor{github-dark-red}{VulnerabilityPatch}(\textcolor{github-dark-red}{Event}):} \\
+                        \texttt{\small\textcolor{github-blue}{\quad """A VulnerabilityPatch Event happens when a}}                                        \\
+                        \texttt{\small\textcolor{github-blue}{\quad software company addresses a known vulnerability}}                                    \\
+                        \texttt{\small\textcolor{github-blue}{\quad by releasing or describing an update."""}}                                            \\
+                        \texttt{\small\quad mention: str}                                                                                                 \\
+                        \texttt{\small\textcolor{github-blue}{\quad """The text span that triggers the event.}}                                           \\
+                        \texttt{\small\textcolor{github-blue}{\quad Such as: patch, fixed, addresses, implemented"""}}                                    \\
+                        \texttt{\small\quad cve: \textcolor{github-dark-red}{List}[str] \textcolor{github-gray}{\# The vulnerability identifier}}         \\
+                        \texttt{\small\quad issues: \textcolor{github-dark-red}{List}[str] \textcolor{github-gray}{\# What did the patch fix}}            \\
+                        \texttt{\small\quad platforms: \textcolor{github-dark-red}{List}[str] \textcolor{github-gray}{\# The platforms that ...}}         \\
+                        \texttt{\small\quad vulnerability: \textcolor{github-dark-red}{List}[str] \textcolor{github-gray}{\# The vulnerability}}          \\
+                        % \texttt{\small\quad vulnerable\_system: \textcolor{github-dark-red}{List}[str]} \\ 
+                        \texttt{\small\quad releaser: \textcolor{github-dark-red}{List}[str] \textcolor{github-gray}{\# Entity releasing the patch}}      \\
+                    \end{tabular}
+                \end{table}
+            \end{column}
+        \end{columns}
+    \end{block}
+
+\end{frame}
+
+\begin{frame}
+    \begin{columns}[t]
+        \begin{column}{0.35\textwidth}
+            \begin{block}{Train and evaluation data}
+                \begin{itemize}
+                    \item Some domains are kept for evaluation only.
+                    \item Datasets from different tasks are used:
+                    \begin{itemize}
+                        \item Named Entity Recognition.
+                        \item Relation Extraction.
+                        \item Event Extraction.
+                        \item Event Argument Extraction.
+                        \item Slot Filling.
+                    \end{itemize}
+                \end{itemize}
+            \end{block}
+        \end{column}
+
+        \begin{column}{0.55\textwidth}
+            \begin{table}
+                \vspace{-1.5em}
+                \centering
+                \resizebox{\textwidth}{!}{
+                    \begin{tabular}{l|l|ccccc|cc}
+                        \multicolumn{8}{c}{}                                                                                                                                 \\
+                        \toprule
+                        \textbf{Dataset} & \textbf{Domain} & \textbf{NER} & \textbf{RE} & \textbf{EE} & \textbf{EAE} & \textbf{SF} & \textbf{Training} & \textbf{Evaluation} \\
+                        \midrule
+                        ACE05            & News            & \checkmark   & \checkmark  & \checkmark  & \checkmark   &             & \checkmark        & \checkmark          \\
+                        BC5CDR           & Biomedical      & \checkmark   &             &             &              &             & \checkmark        & \checkmark          \\
+                        CoNLL 2003       & News            & \checkmark   &             &             &              &             & \checkmark        & \checkmark          \\
+                        DIANN            & Biomedical      & \checkmark   &             &             &              &             & \checkmark        & \checkmark          \\
+                        NCBIDisease      & Biomedical      & \checkmark   &             &             &              &             & \checkmark        & \checkmark          \\
+                        Ontonotes 5      & News            & \checkmark   &             &             &              &             & \checkmark        & \checkmark          \\
+                        RAMS             & News            &              &             &             & \checkmark   &             & \checkmark        & \checkmark          \\
+                        TACRED           & News            &              &             &             &              & \checkmark  & \checkmark        & \checkmark          \\
+                        WNUT 2017        & News            & \checkmark   &             &             &              &             & \checkmark        & \checkmark          \\
+                        \midrule
+                        BroadTwitter     & Twitter         & \checkmark   &             &             &              &             &                   & \checkmark          \\
+                        CASIE            & Cybercrime      &              &             & \checkmark  & \checkmark   &             &                   & \checkmark          \\
+                        CrossNER         & \textit{Many}   & \checkmark   &             &             &              &             &                   & \checkmark          \\
+                        E3C              & Biomedical      & \checkmark   &             &             &              &             &                   & \checkmark          \\
+                        FabNER           & Science         & \checkmark   &             &             &              &             &                   & \checkmark          \\
+                        HarveyNER        & Twitter         & \checkmark   &             &             &              &             &                   & \checkmark          \\
+                        MIT Movie        & Queries         & \checkmark   &             &             &              &             &                   & \checkmark          \\
+                        MIT Restaurants  & Queries         & \checkmark   &             &             &              &             &                   & \checkmark          \\
+                        MultiNERD        & Wikipedia       & \checkmark   &             &             &              &             &                   & \checkmark          \\
+                        WikiEvents       & Wikipedia       & \checkmark   &             & \checkmark  & \checkmark   &             &                   & \checkmark          \\
+                        \bottomrule
+                    \end{tabular}
+                }
+                \caption{Datasets used on the experiments.}
+            \end{table}
+        \end{column}
+    \end{columns}
+    
+
+\end{frame}
+
+\begin{frame}
+    \begin{block}{Evaluation results}
+        \begin{figure}
+            \centering
+            \resizebox{.6\textwidth}{!}{
+                \input{images/gollie_results.pgf}
+            }
+            \caption{Supervised and Zero-Shot results.}
+        \end{figure}
+
+        \begin{itemize}
+            \item In the supervised setup, adding guidelines has little to no effect.
+            \item In the Zero-Shot setup, however, adding guidelines improves the performance by 13 F1 points.
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+% \begin{frame}
+%     Guidelines are particularly helpful for Zero-Shot scenarios. But, even if the datasets are different, \emphasize{some of the labels are shared across datasets} even in the Zero-Shot scenario.
+%     \blockskip
+
+%     \begin{block}{Research Questions}
+%         \begin{itemize}
+%             \item How does the guidelines affect for seen and unseen labels?
+%         \end{itemize}
+
+%     \end{block}
+
+% \end{frame}
+
+
+\begin{frame}
+    \begin{block}{Research Questions}
+        \begin{itemize}
+            {\pgfsetfillopacity{0.2}
+                \item Are guidelines helpful when data is available? And when it is not?
+            }
+            {\pgfsetfillopacity{1.0}
+                \item How do the guidelines affect seen and unseen labels?
+            }
+            {\pgfsetfillopacity{0.2}
+                \item Where do the errors come from?
+                \item Which are the remaining challenges?
+            }
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \begin{block}{Experimental Setup}
+        \begin{itemize}
+            \item We categorize the labels into \emphasize{seen} and \emphasize{unseen} based on the labels used for training.
+            \item We recomputed the F1-score average according to that categorization.
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \begin{block}{Seen vs Unseen results}
+        \begin{figure}
+            \centering
+            \resizebox{.6\textwidth}{!}{
+                \input{images/gollie_see_unseen_results.pgf}
+            }
+            \caption{Seen vs Unseen Zero-Shot results.}
+        \end{figure}
+        \vspace{-1em}
+        \begin{itemize}
+            \item In the case of seen labels, the baseline still struggles mainly due to label definition shifts.
+            \item For the unseen labels, GoLLIE is highly superior to the baseline.
+            \item Interestingly, the gap between seen and unseen becomes smaller with the size of the model.
+        \end{itemize}
+    \end{block}
+
+\end{frame}
+
+% \begin{frame}
+%     We saw that guidelines are helpful when there exists a definition shift, or for labels that the model has not seen before. But, where do the errors come from?
+%     \blockskip
+
+%     \begin{block}{Research Questions}
+%         \begin{itemize}
+%             \item Assuming the model is capable of following the guidelines, where do the errors come from?
+%             \item Which are the remaining challenges?
+%         \end{itemize}
+%     \end{block}
+
+% \end{frame}
+
+
+\begin{frame}
+    \begin{block}{Research Questions}
+        \begin{itemize}
+            {\pgfsetfillopacity{0.2}
+                \item Are guidelines helpful when data is available? And when it is not?
+            }
+            {\pgfsetfillopacity{0.2}
+                \item How do the guidelines affect seen and unseen labels?
+            }
+            {\pgfsetfillopacity{1.0}
+                \item Where do the errors come from?
+                % \item Which are the remaining challenges?
+            }
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}[t]
+    \begin{block}{Error analisis}
+        \begin{table}
+            \centering
+            %\vspace{-1.0em}
+            \small
+            %\caption{This table shows the F1 scores for specific labels from different datasets. The guideline column is a small summary of the actual guideline used to prompt the model.}
+            \adjustbox{max width=.85\linewidth}{\begin{tabular}{@{}llp{12cm}cc@{}}                                                          
+                \toprule
+                \multicolumn{1}{l}{\textbf{Dataset}}                   & \multicolumn{1}{l}{\textbf{Label}} & \multicolumn{1}{l}{\textbf{Guideline}}                                                                           & \textbf{Baseline} & \textbf{GoLLIE} \\
+                \midrule
+                
+                \rowcolor{ForestGreen!10} MultiNERD                    & Media                              & Titles of films, books, songs, albums, fictional characters, and languages.                                       & 13.6              & 69.1           \\
+                \rowcolor{ForestGreen!10} \rule{0pt}{2.25ex} CASIE     & Vul. Patch                         & When a software company addresses a vulnerability by releasing an update.                                        & 27.7              & 70.5            \\
+                \rowcolor{ForestGreen!10} \rule{0pt}{2ex} Movie        & Trailer                            & Refers to a short promotional video or preview of a movie.                                                       & 00.0              & 76.4            \\
+                \rowcolor{ForestGreen!10} \rule{0pt}{2ex} AI           & Task                               & Particular research task or problem within a specific AI research field.                                         & 02.7              & 63.9  \\
+    
+                        
+                \rowcolor{CornflowerBlue!10} \rule{0pt}{2ex}MultiNERD & Time                               & Specific and well-defined time intervals, such as eras, historical periods, centuries, years and important days. & 01.4              & 03.5\\
+                    
+                
+                \rowcolor{Thistle!10} \rule{0pt}{2ex}Movie            & Plot                               & Recurring concept, event, or motif that plays a significant role in the development of a movie.                  & 00.4              & 05.1            \\
+                \rowcolor{Thistle!10} \rule{0pt}{2ex} AI               & Misc                               & Named entities that are not included in any other category.                                                      & 01.1              & 05.2            \\
+                \rowcolor{Thistle!10} \rule{0pt}{2ex} Literature       & Misc                               & Named entities that are not included in any other category.                                                      & 03.7              & 30.8            \\
+                \rowcolor{Thistle!10} \rule{0pt}{2ex} Literature       & Writer                             & Individual actively engaged in the creation of literary works.                                                   & 04.2              & 65.1            \\
+                \rowcolor{Thistle!10} \rule{0pt}{2ex} Literature       & Person                             & Person name that is not a writer.                                                                                & 33.5              & 49.4            \\
+                \rowcolor{Thistle!10} \rule{0pt}{2ex} Science          & Scientist                          & A person who is studying or has expert knowledge of a natural science field.                                     & 02.1              & 05.8      \\
+                \rowcolor{Thistle!10} \rule{0pt}{2ex} Science          & Person                             & Person name that is not a scientist.                                                                             & 46.1              & 45.9            \\
+                        %\rowcolor{Thistle!10} \rule{0pt}{2ex} Politics & Politician & Person actively engaged in politics. &  0.00 & 13.03 \\
+                \rowcolor{Thistle!10} \rule{0pt}{2ex} Politics         & Polit. Party                       & Organization that compete in a particular country's elections.                                                   & 11.2              & 34.9 \\
+                    \bottomrule
+                \end{tabular}}
+            \label{tab:error_analysis}
+        \end{table}
+        \medskip
+
+        \begin{itemize}
+            \only<1>{\item \textcolor{ForestGreen}{Green rows} represent helpful guidelines.}
+                  \only<2>{\item \textcolor{CornflowerBlue}{Blue rows} represent datasets that do not follow their annotation guidelines.}
+                  \only<3>{\item \textcolor{Thistle}{Red rows} represent labels that have poorly defined guidelines.}
+        \end{itemize}
+
+    \end{block}
+
+\end{frame}
+
+\section{Conclusions and Future Work}
+\makesubsectiontitlepage
+
+\subsection{Conclusions}
+
+\begin{frame}
+    \onslide<1-> {
+        In this thesis, we have made the following contributions:
+        \begin{itemize}
+            \item Zero- and Few-Shot Information Extraction is possible thanks to a textual representation.
+            \item The Textual Entailment data is key for the performance.
+            \item Knowledge transfer between schemas is possible without any mapping.
+            \item It is robust to different verbalization styles, and it is more efficient than annotating examples.
+        \end{itemize}
+        \blockskip
+    }
+
+    \onslide<2> {
+        Additionally, annotation guidelines are needed to:
+        \begin{itemize}
+            \item Help the model with unknown and unseen labels.
+            \item Address the definition shift from different datasets.
+        \end{itemize}
+    }
+
+\end{frame}
+
+\subsection{Future Work}
+
+\begin{frame}
+
+    \onslide<1-> {
+        \begin{block}{Estimation of quality and gold standards}
+            \begin{itemize}
+                \item The field is moving towards \emphasize{dynamic and preference evaluations}.
+                \item In Information Extraction gold-standards suffer from annotation errors and low-agreement rates.
+                \item Maybe there can be better ways to evaluate the models.
+            \end{itemize}
+        \end{block}
+    }
+
+    \onslide<2> {
+        \begin{block}{Document level Information Extraction}
+            \begin{itemize}
+                \item LLMs unlock the opportunity to work with large documents.
+                \item The current approaches are limited to sentence-level or paragraph-level, which do not capture the whole picture of the task.
+                \item Working on document level requires to \emphasize{address challenges that are largely unexplored}.
+            \end{itemize}
+        \end{block}
+    }
+
+\end{frame}
+
+\subsection{Papers and References}
+
+\begin{frame}
+    \begin{block}{Papers that are part of this thesis}
+        \begin{itemize}
+            \item \small{\textbf{Sainz O.}, Lopez de Lacalle O., Labaka G., Barrena A., and Agirre E. \href{https://doi.org/10.18653/v1/2021.emnlp-main.92}{\textcolor{primary}{Label Verbalization and Entailment for Effective Zero and Few-Shot Relation Extraction}}. (EMNLP 2021)}
+            \item \small{\textbf{Sainz O.}, Gonzalez-Dios I., Lopez de Lacalle O., Min B., and Agirre E. \href{https://doi.org/10.18653/v1/2022.findings-naacl.187}{\textcolor{primary}{Textual Entailment for Event Argument Extraction: Zero- and Few-Shot with Multi-Source Learning}}. (NAACL-Findings 2022)}
+            \item \small{\textbf{Sainz O.}, Qiu H., Lopez de Lacalle O., Agirre E., and Min B. \href{https://doi.org/10.18653/v1/2022.naacl-demo.4}{\textcolor{primary}{ZS4IE: A toolkit for Zero-Shot Information Extraction with simple Verbalizations}}. (NAACL 2022)}
+            \item \small{\textbf{Sainz O.}, García-Ferrero I., Agerri R., Lopez de Lacalle O., Rigau G., and Agirre E. \href{https://openreview.net/forum?id=Y3wpuxd7u9}{\textcolor{primary}{GoLLIE: Annotation guidelines improve zero-shot information-extraction}}. (ICLR 2024)}
+        \end{itemize}
+    \end{block}
+
+\end{frame}
+
+\begin{frame}
+    \vspace{-1em}
+    \begin{block}{Papers that are not part of this thesis}
+
+        \begin{itemize}
+            \item \small{\textbf{Sainz O.} and Rigau G. \href{https://aclanthology.org/2021.gwc-1.6}{\textcolor{primary}{Ask2Transformers: Zero-shot domain labelling with pretrained language models}}. (GWC 2021)}
+            \item \small{\textbf{Sainz O.,} Lopez de Lacalle O., Agirre E., and Rigau G. \href{https://aclanthology.org/2023.gwc-1.40}{\textcolor{primary}{What do language models know about word senses? zero-shot WSD with language models and domain inventories}}. (GWC 2023)}
+            \item \small{Min B., Ross H., Sulem E., Veyseh A.P.B., Nguyen T.H., \textbf{Sainz O.}, Agirre E., Heintz I., and Roth D. \href{https://dl.acm.org/doi/10.1145/3605943}{\textcolor{primary}{Recent advances in natural language processing via large pre-trained language models: A survey}} (ACM Computing Surveys 2023)}
+            \item \small{García-Ferrero I., Campos J.A., \textbf{Sainz O.}, Salaberria A., and Roth D. \href{https://aclanthology.org/2023.semeval-1.186}{\textcolor{primary}{IXA/cog-comp at SemEval-2023 task 2: Context-enriched multilingual named entity recognition using knowledge bases}} (SemEval 2023)}
+            \item \small{\textbf{Sainz O.}, Campos J., García-Ferrero I., Etxaniz J., de Lacalle O.L., and Agirre E. \href{https://aclanthology.org/2023.findings-emnlp.722}{\textcolor{primary}{NLP evaluation in trouble: On the need to measure LLM data contamination for each benchmark}} (EMNLP-Findings 2023)}
+            \item \small{Zubillaga M., \textbf{Sainz O.}, Estarrona A., Lopez de Lacalle O., Agirre A. \href{https://arxiv.org/abs/2404.06392}{\textcolor{primary}{Event Extraction in Basque: Typologically motivated Cross-Lingual Transfer-Learning Analysis}} (LREC-Coling 2024)}
+            \item \small{Etxaniz J., \textbf{Sainz O.}, Perez N., Aldabe I., Rigau G., Agirre E., Ormazabal A., Artetxe M., Soroa A. \href{https://arxiv.org/abs/2403.20266}{\textcolor{primary}{Latxa: An Open Langauge Model and Evaluation Suite for Basque}}. (ACL 2024)}
+        \end{itemize}
+    \end{block}
+
+\end{frame}
+
+% \begin{frame}[allowframebreaks]{References}
+%     \printbibliography
+% \end{frame}
+
+{
+    \setbeamertemplate{footline}{}
+    \setbeamertemplate{headline}{}
+    \setbeamertemplate{frametitle}{}
+    \begin{frame}
+        \titlepage
+    \end{frame}
+}
+\end{document}

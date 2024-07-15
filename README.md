@@ -1,2 +1,2 @@
-# low_resource_information_extraction
-The presentation slides for my PhD dissertation defense entitled "Low-resource Information Extraction".
+# Slides for the talk: Low-resource Information Extraction
+The LaTeX code for the presentation slides of my PhD dissertation defense entitled "Low-resource Information Extraction".

@@ -1,0 +1,221 @@
+@article{Grishman_2019,
+  title   = {Twenty-five years of information extraction},
+  volume  = {25},
+  doi     = {10.1017/S1351324919000512},
+  number  = {6},
+  journal = {Natural Language Engineering},
+  author  = {Grishman, Ralph},
+  year    = {2019},
+  pages   = {677–692}
+}
+
+@inproceedings{sainz-etal-2021-label,
+  title     = {Label Verbalization and Entailment for Effective Zero and Few-Shot Relation Extraction},
+  author    = {Sainz, Oscar  and
+               Lopez de Lacalle, Oier  and
+               Labaka, Gorka  and
+               Barrena, Ander  and
+               Agirre, Eneko},
+  booktitle = {Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing},
+  month     = nov,
+  year      = {2021},
+  address   = {Online and Punta Cana, Dominican Republic},
+  publisher = {Association for Computational Linguistics},
+  url       = {https://aclanthology.org/2021.emnlp-main.92},
+  doi       = {10.18653/v1/2021.emnlp-main.92},
+  pages     = {1199--1212},
+  abstract  = {Relation extraction systems require large amounts of labeled examples which are costly to annotate. In this work we reformulate relation extraction as an entailment task, with simple, hand-made, verbalizations of relations produced in less than 15 min per relation. The system relies on a pretrained textual entailment engine which is run as-is (no training examples, zero-shot) or further fine-tuned on labeled examples (few-shot or fully trained). In our experiments on TACRED we attain 63{\%} F1 zero-shot, 69{\%} with 16 examples per relation (17{\%} points better than the best supervised system on the same conditions), and only 4 points short to the state-of-the-art (which uses 20 times more training data). We also show that the performance can be improved significantly with larger entailment models, up to 12 points in zero-shot, allowing to report the best results to date on TACRED when fully trained. The analysis shows that our few-shot systems are specially effective when discriminating between relations, and that the performance difference in low data regimes comes mainly from identifying no-relation cases.}
+}
+
+@inproceedings{sainz-etal-2022-textual,
+  title     = {Textual Entailment for Event Argument Extraction: Zero- and Few-Shot with Multi-Source Learning},
+  author    = {Sainz, Oscar  and
+               Gonzalez-Dios, Itziar  and
+               Lopez de Lacalle, Oier  and
+               Min, Bonan  and
+               Agirre, Eneko},
+  booktitle = {Findings of the Association for Computational Linguistics: NAACL 2022},
+  month     = jul,
+  year      = {2022},
+  address   = {Seattle, United States},
+  publisher = {Association for Computational Linguistics},
+  url       = {https://aclanthology.org/2022.findings-naacl.187},
+  doi       = {10.18653/v1/2022.findings-naacl.187},
+  pages     = {2439--2455},
+  abstract  = {Recent work has shown that NLP tasks such as Relation Extraction (RE) can be recasted as a Textual Entailment tasks using verbalizations, with strong performance in zero-shot and few-shot settings thanks to pre-trained entailment models. The fact that relations in current RE datasets are easily verbalized casts doubts on whether entailment would be effective in more complex tasks. In this work we show that entailment is also effective in Event Argument Extraction (EAE), reducing the need of manual annotation to 50{\%} and 20{\%} in ACE and WikiEvents, respectively, while achieving the same performance as with full training. More importantly, we show that recasting EAE as entailment alleviates the dependency on schemas, which has been a roadblock for transferring annotations between domains. Thanks to entailment, the multi-source transfer between ACE and WikiEvents further reduces annotation down to 10{\%} and 5{\%} (respectively) of the full training without transfer. Our analysis shows that key to good results is the use of several entailment datasets to pre-train the entailment model. Similar to previous approaches, our method requires a small amount of effort for manual verbalization: only less than 15 minutes per event argument types is needed; comparable results can be achieved from users of different level of expertise.}
+}
+
+@inproceedings{sainz-etal-2022-zs4ie,
+  title     = {{ZS}4{IE}: A toolkit for Zero-Shot Information Extraction with simple Verbalizations},
+  author    = {Sainz, Oscar  and
+               Qiu, Haoling  and
+               Lopez de Lacalle, Oier  and
+               Agirre, Eneko  and
+               Min, Bonan},
+  booktitle = {Proceedings of the 2022 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies: System Demonstrations},
+  month     = jul,
+  year      = {2022},
+  address   = {Hybrid: Seattle, Washington + Online},
+  publisher = {Association for Computational Linguistics},
+  url       = {https://aclanthology.org/2022.naacl-demo.4},
+  doi       = {10.18653/v1/2022.naacl-demo.4},
+  pages     = {27--38},
+  abstract  = {The current workflow for Information Extraction (IE) analysts involves the definition of the entities/relations of interest and a training corpus with annotated examples. In this demonstration we introduce a new workflow where the analyst directly verbalizes the entities/relations, which are then used by a Textual Entailment model to perform zero-shot IE. We present the design and implementation of a toolkit with a user interface, as well as experiments on four IE tasks that show that the system achieves very good performance at zero-shot learning using only 5{--}15 minutes per type of a user{'}s effort. Our demonstration system is open-sourced at \url{https://github.com/BBN-E/ZS4IE}. A demonstration video is available at \url{https://vimeo.com/676138340}.}
+}
+
+@inproceedings{sainz2024gollie,
+  title     = {Go{LLIE}: Annotation Guidelines improve Zero-Shot Information-Extraction},
+  author    = {Oscar Sainz and Iker García-Ferrero and Rodrigo Agerri and Oier Lopez de Lacalle and German Rigau and Eneko Agirre},
+  booktitle = {The Twelfth International Conference on Learning Representations},
+  year      = {2024},
+  url       = {https://openreview.net/forum?id=Y3wpuxd7u9}
+}
+
+@article{min2024recent,
+  author     = {Min, Bonan and Ross, Hayley and Sulem, Elior and Veyseh, Amir Pouran Ben and Nguyen, Thien Huu and Sainz, Oscar and Agirre, Eneko and Heintz, Ilana and Roth, Dan},
+  title      = {Recent Advances in Natural Language Processing via Large Pre-trained Language Models: A Survey},
+  year       = {2023},
+  issue_date = {February 2024},
+  publisher  = {Association for Computing Machinery},
+  address    = {New York, NY, USA},
+  volume     = {56},
+  number     = {2},
+  issn       = {0360-0300},
+  url        = {https://doi.org/10.1145/3605943},
+  doi        = {10.1145/3605943},
+  abstract   = {Large, pre-trained language models (PLMs) such as BERT and GPT have drastically changed the Natural Language Processing (NLP) field. For numerous NLP tasks, approaches leveraging PLMs have achieved state-of-the-art performance. The key idea is to learn a generic, latent representation of language from a generic task once, then share it across disparate NLP tasks. Language modeling serves as the generic task, one with abundant self-supervised text available for extensive training. This article presents the key fundamental concepts of PLM architectures and a comprehensive view of the shift to PLM-driven NLP techniques. It surveys work applying the pre-training then fine-tuning, prompting, and text generation approaches. In addition, it discusses PLM limitations and suggested directions for future research.},
+  journal    = {ACM Comput. Surv.},
+  month      = {9},
+  articleno  = {30},
+  numpages   = {40},
+  keywords   = {Large language models, foundational models, generative AI, neural networks}
+}
+
+@misc{brown2020language,
+  title         = {Language Models are Few-Shot Learners},
+  author        = {Tom B. Brown and Benjamin Mann and Nick Ryder and Melanie Subbiah and Jared Kaplan and Prafulla Dhariwal and Arvind Neelakantan and Pranav Shyam and Girish Sastry and Amanda Askell and Sandhini Agarwal and Ariel Herbert-Voss and Gretchen Krueger and Tom Henighan and Rewon Child and Aditya Ramesh and Daniel M. Ziegler and Jeffrey Wu and Clemens Winter and Christopher Hesse and Mark Chen and Eric Sigler and Mateusz Litwin and Scott Gray and Benjamin Chess and Jack Clark and Christopher Berner and Sam McCandlish and Alec Radford and Ilya Sutskever and Dario Amodei},
+  year          = {2020},
+  eprint        = {2005.14165},
+  archiveprefix = {arXiv},
+  primaryclass  = {id='cs.CL' full_name='Computation and Language' is_active=True alt_name='cmp-lg' in_archive='cs' is_general=False description='Covers natural language processing. Roughly includes material in ACM Subject Class I.2.7. Note that work on artificial languages (programming languages, logics, formal systems) that does not explicitly address natural-language issues broadly construed (natural-language processing, computational linguistics, speech, text retrieval, etc.) is not appropriate for this area.'}
+}
+
+@inproceedings{schick-schutze-2021-exploiting,
+  title     = {Exploiting Cloze-Questions for Few-Shot Text Classification and Natural Language Inference},
+  author    = {Schick, Timo  and
+               Sch{\"u}tze, Hinrich},
+  editor    = {Merlo, Paola  and
+               Tiedemann, Jorg  and
+               Tsarfaty, Reut},
+  booktitle = {Proceedings of the 16th Conference of the European Chapter of the Association for Computational Linguistics: Main Volume},
+  month     = apr,
+  year      = {2021},
+  address   = {Online},
+  publisher = {Association for Computational Linguistics},
+  url       = {https://aclanthology.org/2021.eacl-main.20},
+  doi       = {10.18653/v1/2021.eacl-main.20},
+  pages     = {255--269},
+  abstract  = {Some NLP tasks can be solved in a fully unsupervised fashion by providing a pretrained language model with {``}task descriptions{''} in natural language (e.g., Radford et al., 2019). While this approach underperforms its supervised counterpart, we show in this work that the two ideas can be combined: We introduce Pattern-Exploiting Training (PET), a semi-supervised training procedure that reformulates input examples as cloze-style phrases to help language models understand a given task. These phrases are then used to assign soft labels to a large set of unlabeled examples. Finally, standard supervised training is performed on the resulting training set. For several tasks and languages, PET outperforms supervised training and strong semi-supervised approaches in low-resource settings by a large margin.}
+}
+
+@article{ACE,
+  title   = {ACE 2005 multilingual training corpus},
+  author  = {Walker, Christopher and Strassel, Stephanie and Medero, Julie and Maeda, Kazuaki},
+  journal = {Linguistic Data Consortium, Philadelphia},
+  volume  = {57},
+  pages   = {45},
+  year    = {2006},
+  url     = {https://catalog.ldc.upenn.edu/LDC2006T06}
+}
+
+@inproceedings{dagan2006rte,
+  author    = {Dagan, Ido
+               and Glickman, Oren
+               and Magnini, Bernardo},
+  editor    = {Qui{\~{n}}onero-Candela, Joaquin
+               and Dagan, Ido
+               and Magnini, Bernardo
+               and d'Alch{\'e}-Buc, Florence},
+  title     = {The PASCAL Recognising Textual Entailment Challenge},
+  booktitle = {Machine Learning Challenges. Evaluating Predictive Uncertainty, Visual Object Classification, and Recognising Tectual Entailment},
+  year      = {2006},
+  publisher = {Springer Berlin Heidelberg},
+  address   = {Berlin, Heidelberg},
+  pages     = {177--190},
+  abstract  = {This paper describes the PASCAL Network of Excellence first Recognising Textual Entailment (RTE-1) Challenge benchmark. The RTE task is defined as recognizing, given two text fragments, whether the meaning of one text can be inferred (entailed) from the other. This application-independent task is suggested as capturing major inferences about the variability of semantic expression which are commonly needed across multiple applications. The Challenge has raised noticeable attention in the research community, attracting 17 submissions from diverse groups, suggesting the generic relevance of the task.},
+  isbn      = {978-3-540-33428-6}
+}
+
+@inproceedings{de-marneffe-etal-2008-finding,
+  title     = {Finding Contradictions in Text},
+  author    = {de Marneffe, Marie-Catherine  and
+               Rafferty, Anna N.  and
+               Manning, Christopher D.},
+  editor    = {Moore, Johanna D.  and
+               Teufel, Simone  and
+               Allan, James  and
+               Furui, Sadaoki},
+  booktitle = {Proceedings of ACL-08: HLT},
+  month     = jun,
+  year      = {2008},
+  address   = {Columbus, Ohio},
+  publisher = {Association for Computational Linguistics},
+  url       = {https://aclanthology.org/P08-1118},
+  pages     = {1039--1047}
+}
+
+@misc{liu2019roberta,
+  title         = {RoBERTa: A Robustly Optimized BERT Pretraining Approach},
+  author        = {Yinhan Liu and Myle Ott and Naman Goyal and Jingfei Du and Mandar Joshi and Danqi Chen and Omer Levy and Mike Lewis and Luke Zettlemoyer and Veselin Stoyanov},
+  year          = {2019},
+  eprint        = {1907.11692},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.CL}
+}
+
+@inproceedings{he2021deberta,
+  title     = {{\{}DEBERTA{\}}: {\{}DECODING{\}}-{\{}ENHANCED{\}} {\{}BERT{\}} {\{}WITH{\}} {\{}DISENTANGLED{\}} {\{}ATTENTION{\}}},
+  author    = {Pengcheng He and Xiaodong Liu and Jianfeng Gao and Weizhu Chen},
+  booktitle = {International Conference on Learning Representations},
+  year      = {2021},
+  url       = {https://openreview.net/forum?id=XPZIaotutsD}
+}
+
+@inproceedings{zhang2017tacred,
+  author    = {Zhang, Yuhao and Zhong, Victor and Chen, Danqi and Angeli, Gabor and Manning, Christopher D.},
+  booktitle = {Proceedings of the 2017 Conference on Empirical Methods in Natural Language Processing (EMNLP 2017)},
+  title     = {Position-aware Attention and Supervised Data Improve Slot Filling},
+  url       = {https://nlp.stanford.edu/pubs/zhang2017tacred.pdf},
+  pages     = {35--45},
+  year      = {2017}
+}
+
+@inproceedings{baldini-soares-etal-2019-matching,
+  title     = {Matching the Blanks: Distributional Similarity for Relation Learning},
+  author    = {Baldini Soares, Livio  and
+               FitzGerald, Nicholas  and
+               Ling, Jeffrey  and
+               Kwiatkowski, Tom},
+  editor    = {Korhonen, Anna  and
+               Traum, David  and
+               M{\`a}rquez, Llu{\'\i}s},
+  booktitle = {Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics},
+  month     = jul,
+  year      = {2019},
+  address   = {Florence, Italy},
+  publisher = {Association for Computational Linguistics},
+  url       = {https://aclanthology.org/P19-1279},
+  doi       = {10.18653/v1/P19-1279},
+  pages     = {2895--2905},
+  abstract  = {General purpose relation extractors, which can model arbitrary relations, are a core aspiration in information extraction. Efforts have been made to build general purpose extractors that represent relations with their surface forms, or which jointly embed surface forms with relations from an existing knowledge graph. However, both of these approaches are limited in their ability to generalize. In this paper, we build on extensions of Harris{'} distributional hypothesis to relations, as well as recent advances in learning text representations (specifically, BERT), to build task agnostic relation representations solely from entity-linked text. We show that these representations significantly outperform previous work on exemplar based relation extraction (FewRel) even without using any of that task{'}s training data. We also show that models initialized with our task agnostic representations, and then tuned on supervised relation extraction datasets, significantly outperform the previous methods on SemEval 2010 Task 8, KBP37, and TACRED}
+}
+
+@inproceedings{tjong-kim-sang-de-meulder-2003-introduction,
+  title     = {Introduction to the {C}o{NLL}-2003 Shared Task: Language-Independent Named Entity Recognition},
+  author    = {Tjong Kim Sang, Erik F.  and
+               De Meulder, Fien},
+  booktitle = {Proceedings of the Seventh Conference on Natural Language Learning at {HLT}-{NAACL} 2003},
+  year      = {2003},
+  url       = {https://aclanthology.org/W03-0419},
+  pages     = {142--147}
+}
